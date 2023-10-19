@@ -1,0 +1,11 @@
+{
+  "options": {
+    "quantum": 2,
+    "algorithm": 1
+  },
+  "process": [
+    {"arrived_at": 0, "execution_time": 2, "priority": 4, "name": "process_1"},
+    {"arrived_at": 2, "execution_time": 4, "priority": 5, "name": "process_2"}
+  ]
+}
+
