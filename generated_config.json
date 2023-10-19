@@ -1,0 +1,22 @@
+{
+	"options":	{
+		"quantum":	3,
+		"algorithm":	10
+	},
+	"process":	[{
+			"arrived_at":	39,
+			"execution_time":	9,
+			"priority":	9,
+			"name":	"p1"
+		}, {
+			"arrived_at":	2,
+			"execution_time":	2,
+			"priority":	5,
+			"name":	"p2"
+		}, {
+			"arrived_at":	15,
+			"execution_time":	9,
+			"priority":	4,
+			"name":	"p3"
+		}]
+}

@@ -72,14 +72,17 @@ end:
     cJSON_Delete(config_json);
     return status;
 }
-int main() {
+int main(int argc, char* argv[]) {
+    if(argc < 2) {printf("Please input the config file.\n");}
+    else  {
+        // Sample data
+        //? TODO: Make the user capable of choosing.
+        options ops;
+        ops.algorithm = 10;
+        ops.quantum = 3;
+        generate_config_file(ops);
+    }
 
-    // Sample data
-    //? TODO: Make the user capable of choosing.
-    options ops;
-    ops.algorithm = 10;
-    ops.quantum = 3;
-
-    printf("%s\n", generate_config_file(ops));
+   
     return 0;
 }

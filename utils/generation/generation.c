@@ -14,7 +14,7 @@ void create_random_process_array(process processes[rand_dim]) {
     }
 }
 
-char *generate_config_file(options ops) {
+void *generate_config_file(options ops) {
     process resolution_numbers[rand_dim];
     create_random_process_array(resolution_numbers);
 
@@ -81,5 +81,8 @@ char *generate_config_file(options ops) {
 
 end:
     cJSON_Delete(config_file);
-    return string;
+    // Create file
+    FILE *fptr = fopen("generated_config.json", "w");
+    fprintf(fptr,"%s",string);
+    fclose(fptr);
 }
