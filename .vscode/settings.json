@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "generation.h": "c"
+        "generation.h": "c",
+        "typeinfo": "c",
+        "string.h": "c"
     }
 }

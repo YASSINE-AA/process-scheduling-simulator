@@ -1,4 +1,3 @@
-#include "./generation.h"
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -111,6 +110,5 @@ end:
         }
     } else {
        write_to_config(string);
-    }
-    
+    }  
 }
