@@ -1,8 +1,10 @@
 #include "./generation.h"
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <ctype.h>
 
-#define rand_dim 3
+int rand_dim = 20;
 
 void create_random_process_array(process processes[rand_dim]) {
     srand(time(NULL)); 
@@ -14,7 +16,17 @@ void create_random_process_array(process processes[rand_dim]) {
     }
 }
 
+void write_to_config(const char* content) {
+    FILE *fptr = fopen("generated_config.json", "w");
+    fprintf(fptr,"%s",content);
+    fclose(fptr);
+    printf("Config file successfully generated!\n");
+}
+
 void *generate_config_file(options ops) {
+    srand(time(NULL)); 
+    rand_dim = rand() % 10 + 2;
+    
     process resolution_numbers[rand_dim];
     create_random_process_array(resolution_numbers);
 
@@ -81,8 +93,24 @@ void *generate_config_file(options ops) {
 
 end:
     cJSON_Delete(config_file);
+    const char* config_file_name = "generated_config.json";
+  
     // Create file
-    FILE *fptr = fopen("generated_config.json", "w");
-    fprintf(fptr,"%s",string);
-    fclose(fptr);
+    if(access(config_file_name, F_OK) == 0) {
+        char userChoice;
+        // exists
+        printf("Config file has already been generated!\n");
+        printf("Do you want to regenerate it? [Y/N]");
+        scanf("%c", &userChoice);
+        if(toupper(userChoice) == 'Y') {
+            write_to_config(string);
+        } else if(toupper(userChoice) == 'N') {
+            
+        } else {
+            printf("Wrong parameter!\n");
+        }
+    } else {
+       write_to_config(string);
+    }
+    
 }
