@@ -9,6 +9,7 @@ void get_round_robin_output(int quantum, process* process_array, int number_of_p
 
     // Initialize the queue
     create_queue(queue);
+    
     process* executed_processes = (process*) malloc(sizeof(process) * number_of_process);
     int num_executed_processes = 0;
     int new_arrivals_size = 0;
@@ -41,19 +42,17 @@ void get_round_robin_output(int quantum, process* process_array, int number_of_p
                             
                
                         } 
-                        printf("%s [%d -> %d] ! ", executed.name, old_counter-1, counter-1);
+                        printf("%s [%d -> %d] ! ", executed.name, old_counter, counter);
                         
                     }
             }
         }
-         
-    
+
         new_arrivals = get_new_arrival(counter, executed_processes, num_executed_processes, process_array, number_of_process, &new_arrivals_size);
         next_available_proc = next_available(new_arrivals, new_arrivals_size, next_available_proc);
-    
-    counter++;
-    
+        counter++;
     }
+ 
     free(new_arrivals);
     free(queue); // Free the queue
 }

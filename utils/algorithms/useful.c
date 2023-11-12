@@ -99,6 +99,28 @@ process* next_available(process* available_processes, int number_available_proce
     return earliest;
 }
 
+process* next_available_srt(process* available_processes, int number_available_processes, process* previous_value) {
+    process* earliest = NULL;
+
+    if (available_processes != NULL) {
+        for (int i = 0; i < number_available_processes; i++) {
+            if (available_processes[i].execution_time > 0) {
+                if (earliest == NULL || available_processes[i].execution_time >= earliest->execution_time) {
+                    if(previous_value != NULL) {
+                        if (available_processes[i].name != previous_value->name && available_processes[i].execution_time >= previous_value->execution_time) {
+                            earliest = &available_processes[i];
+                        }
+                    } else {
+                        earliest = &available_processes[i];
+                    }
+                   
+                }
+            }
+        }
+    }
+
+    return earliest;
+}
 int get_earliest_time(process* process_array, int process_array_size) {
     if(process_array_size == 0) return process_array[0].arrived_at;
     int min_value = get_earliest_time(process_array, process_array_size - 1);

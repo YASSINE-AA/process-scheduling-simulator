@@ -14,10 +14,9 @@ void get_fifo_output(process* process_array, int number_of_process) {
     process* available_at_t = who_available(get_latest_time(process_array, number_of_process), process_array, number_of_process, &number_available_processes);
 
     for (int i = 0; i < number_available_processes; i++) {
-        //process* active_proc = next_available(available_at_t, number_available_processes, NULL);
-      //  add_to_queue(queue, *active_proc);
-       // active_proc->execution_time = -1;
-       printf("%s %d", available_at_t[i].name, available_at_t[i].execution_time);
+        process* active_proc = next_available(available_at_t, number_available_processes, NULL);
+        add_to_queue(queue, *active_proc);
+        active_proc->execution_time = -1;
     }
     
     free(available_at_t);
