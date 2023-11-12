@@ -103,19 +103,7 @@ int main(int argc, char* argv[]) {
         } 
         // Lire fichier configuration
         process* proc_head = read_config_file(argv[1]);
-        /*if (proc_head != NULL) {
-            for (int i = 0; i < config_file_size; i++) {
-                printf("Arrived At: %d\n", proc_head[i].arrived_at);
-                printf("Execution Time: %d\n", proc_head[i].execution_time);
-                printf("Priority: %d\n", proc_head[i].priority);
-                printf("Name: %s\n", proc_head[i].name);
-            }
-            free(proc_head);
-        }*/
-
-        //round_robin_output(ops.quantum, proc_head, config_file_size);
- 
-        get_fifo_output(proc_head, config_file_size);
+        get_round_robin_output(ops.quantum, proc_head, config_file_size);
         
     }
     return 0;

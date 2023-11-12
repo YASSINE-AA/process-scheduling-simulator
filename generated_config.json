@@ -4,29 +4,19 @@
 		"algorithm":	10
 	},
 	"process":	[{
-			"arrived_at":	1,
+			"arrived_at":	41,
 			"execution_time":	2,
-			"priority":	9,
+			"priority":	2,
 			"name":	"p1"
 		}, {
-			"arrived_at":	2,
-			"execution_time":	3,
-			"priority":	0,
+			"arrived_at":	22,
+			"execution_time":	1,
+			"priority":	8,
 			"name":	"p2"
 		}, {
-			"arrived_at":	0,
-			"execution_time":	3,
+			"arrived_at":	36,
+			"execution_time":	4,
 			"priority":	0,
 			"name":	"p3"
-		}, {
-			"arrived_at":	4,
-			"execution_time":	5,
-			"priority":	8,
-			"name":	"p4"
-		}, {
-			"arrived_at":	5,
-			"execution_time":	2,
-			"priority":	9,
-			"name":	"p5"
 		}]
 }
