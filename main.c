@@ -4,10 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "./types.h"
-// My headers
 #include "./utils/algorithms/queue_data_struct.c"
 #include "./utils/algorithms/useful.c"
-#include "./utils/algorithms/SRT.c"
+#include "./utils/algorithms/SJF.c"
 #include "./utils/algorithms/round_robin.c"
 #include "./utils/algorithms/FIFO.c"
 #include "./utils/generation/generation.c"
@@ -105,8 +104,8 @@ int main(int argc, char* argv[]) {
         // Lire fichier configuration
         process* proc_head = read_config_file(argv[1]);
         //get_fifo_output(proc_head, config_file_size);
-        //get_round_robin_output(ops.quantum, proc_head, config_file_size);
-        get_srt_output(proc_head, config_file_size);
+        get_round_robin_output(ops.quantum, proc_head, config_file_size);
+       //get_sjf_output(proc_head, config_file_size);
     }
     return 0;
 }

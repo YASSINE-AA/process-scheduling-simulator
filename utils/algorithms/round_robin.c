@@ -11,16 +11,22 @@ void get_round_robin_output(int quantum, process* process_array, int number_of_p
     create_queue(queue);
     
     process* executed_processes = (process*) malloc(sizeof(process) * number_of_process);
+     if (executed_processes == NULL) {
+        // Handle memory allocation failure
+        return;
+    }
+
     int num_executed_processes = 0;
     int new_arrivals_size = 0;
     int last_execution = 0;
     process* new_arrivals = get_new_arrival(counter, NULL, new_arrivals_size, process_array, number_of_process, &new_arrivals_size);
     process* next_available_proc = next_available(new_arrivals, new_arrivals_size, next_available_proc);
-    while (counter <= get_last_timestamp(process_array, number_of_process)) {
+    while (!is_execution_done(executed_processes, num_executed_processes, process_array, number_of_process)) {
      
-        if(new_arrivals !=NULL) {
+        if(new_arrivals !=NULL && next_available_proc !=NULL) {
             while (next_available_proc != NULL) {
                     add_to_queue(queue, *next_available_proc);
+                    if(next_available_proc != NULL) printf("added %s to the queue! \n", next_available_proc->name);
                     next_available_proc = next_available(new_arrivals, new_arrivals_size, next_available_proc);
             }
         
@@ -42,17 +48,21 @@ void get_round_robin_output(int quantum, process* process_array, int number_of_p
                             
                
                         } 
-                        printf("%s [%d -> %d] ! ", executed.name, old_counter, counter);
+                        printf("%s [%d -> %d] | ", executed.name, old_counter, counter);
                         
                     }
             }
+        } else {
+            counter++;
+           
         }
 
         new_arrivals = get_new_arrival(counter, executed_processes, num_executed_processes, process_array, number_of_process, &new_arrivals_size);
         next_available_proc = next_available(new_arrivals, new_arrivals_size, next_available_proc);
-        counter++;
+   printf("counter: %d\n", counter);
     }
- 
-    free(new_arrivals);
-    free(queue); // Free the queue
+    
+    if(executed_processes != NULL) free(executed_processes);
+    if(new_arrivals != NULL) free(new_arrivals);
+    if(queue != NULL) free(queue);
 }
