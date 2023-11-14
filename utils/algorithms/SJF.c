@@ -9,10 +9,11 @@ void get_sjf_output(process* process_array, int process_array_size) {
     int current_time = get_earliest_time(process_array, process_array_size);
     int last_timestamp = get_last_timestamp(process_array, process_array_size);
     int new_arrival_size = 0; 
+    int in_queue_size = 0;
     int num_executed_processes = 0;
-
+    process* in_queue = (process*) malloc(sizeof(process)*process_array_size);
     process* new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
-    process* next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, NULL);
+    process* next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, NULL, 0);
     process* previous = next_proc_in_q;
     process* executed_processes = (process*) malloc(sizeof(process)*process_array_size);
     if (executed_processes == NULL) {
@@ -24,7 +25,9 @@ void get_sjf_output(process* process_array, int process_array_size) {
             //Populate queue
             while(next_proc_in_q != NULL) {
                 add_to_queue(queue, *next_proc_in_q);    
-                next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, next_proc_in_q);  
+                in_queue[in_queue_size] = *next_proc_in_q;
+                in_queue_size ++;
+                next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, in_queue, in_queue_size);   
             }
 
             //Execute
@@ -40,7 +43,7 @@ void get_sjf_output(process* process_array, int process_array_size) {
            
         }     
         new_arrival = get_new_arrival(current_time, executed_processes, num_executed_processes, process_array, process_array_size, &new_arrival_size);
-        next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, next_proc_in_q);
+        next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size, in_queue, in_queue_size);
     }
     if(executed_processes != NULL) free(executed_processes);
     if(new_arrival != NULL) free(new_arrival);

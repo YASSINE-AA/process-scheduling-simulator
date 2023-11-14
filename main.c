@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
         process* proc_head = read_config_file(argv[1]);
         //get_fifo_output(proc_head, config_file_size);
         get_round_robin_output(ops.quantum, proc_head, config_file_size);
-       //get_sjf_output(proc_head, config_file_size);
+    //  get_sjf_output(proc_head, config_file_size);
     }
     return 0;
 }

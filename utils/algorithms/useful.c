@@ -34,13 +34,15 @@ process* who_available(int current_time, process* process_array, int process_arr
     return available;
 }
 bool is_in_old_list(process p, process* old_process_list, int old_process_list_size) {
-  
-    for (int j = 0; j < old_process_list_size; j++) {
+    if(old_process_list !=NULL) {
+           for (int j = 0; j < old_process_list_size; j++) {
        
         if (strncmp(p.name, old_process_list[j].name, sizeof(p.name)) == 0) {
             return true;
         }
     }
+    }
+ 
     return false;
 }
 
@@ -76,55 +78,71 @@ process* get_new_arrival(int timestamp, process* old_process_list, int old_proce
 }
 
 
-process* next_available(process* available_processes, int number_available_processes, process* previous_value) {
-    process* earliest = NULL;
-    if (available_processes != NULL) {
-        for (int i = 0; i < number_available_processes; i++) {
-            if (available_processes[i].execution_time > 0) {
-                if (earliest == NULL || available_processes[i].arrived_at <= earliest->arrived_at) {
-                    if(previous_value != NULL) {
-                        if (available_processes[i].name != previous_value->name && available_processes[i].arrived_at >= previous_value->arrived_at) {
-                            earliest = &available_processes[i];
-                        }
-                    } else {
+process* next_available(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
+    if(available_processes != NULL) {
+           process* earliest = &available_processes[0];
+    if(is_in_old_list(*earliest, in_queue, proc_in_queue)) {
+        earliest = NULL;
+    }
+    for(int i=0; i<number_available_processes; i++) {
+        if(in_queue == NULL && earliest != NULL) {
+            if(available_processes[i].arrived_at <= earliest->arrived_at) {
+                earliest = &available_processes[i];
+            }
+        } else {
+            if(!is_in_old_list(available_processes[i], in_queue, proc_in_queue)) {
+                if(earliest == NULL) {
+                    earliest = &available_processes[i];
+                } else {
+                    if(available_processes[i].arrived_at <= earliest->arrived_at) {
                         earliest = &available_processes[i];
                     }
-                   
                 }
             }
-        }
+    }
     }
 
     return earliest;
+    }
+
+    return NULL;
+ 
 }
 
 
 
-process* next_available_sjf(process* available_processes, int number_available_processes, process* previous_value) {
-    process* earliest = NULL;
-    
 
-    if (available_processes != NULL) {
-        for (int i = 0; i < number_available_processes; i++) {
-            if(available_processes[i].execution_time > 0) {
-                if (previous_value != NULL) {
-                    if (strncmp(available_processes[i].name, previous_value->name, sizeof(available_processes[i].name)) != 0 &&
-                        available_processes[i].execution_time < previous_value->execution_time && available_processes[i].arrived_at >= previous_value->arrived_at) {
+process* next_available_sjf(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
+    if(available_processes != NULL) {
+           process* earliest = &available_processes[0];
+    if(is_in_old_list(*earliest, in_queue, proc_in_queue)) {
+        earliest = NULL;
+    }
+    for(int i=0; i<number_available_processes; i++) {
+        if(in_queue == NULL && earliest != NULL) {
+            if(available_processes[i].execution_time <= earliest->execution_time) {
+                earliest = &available_processes[i];
+            }
+        } else {
+            if(!is_in_old_list(available_processes[i], in_queue, proc_in_queue)) {
+                if(earliest == NULL) {
+                    earliest = &available_processes[i];
+                } else {
+                    if(available_processes[i].execution_time <= earliest->execution_time) {
                         earliest = &available_processes[i];
                     }
-                } else {
-                    if(earliest == NULL) earliest = &available_processes[i];
-                        if(available_processes[i].execution_time < earliest->execution_time && available_processes[i].arrived_at >= earliest->arrived_at ) {
-                            earliest = &available_processes[i];
-                        }
                 }
-                }
-            
-        }
+            }
+    }
     }
 
     return earliest;
+    }
+
+    return NULL;
+ 
 }
+
 int get_earliest_time(process* process_array, int process_array_size) {
     if(process_array_size == 0) return process_array[0].arrived_at;
     int min_value = get_earliest_time(process_array, process_array_size - 1);
@@ -165,17 +183,27 @@ int get_last_timestamp(process* process_array, int process_array_size) {
 }
 
 bool is_execution_done(process* executed, int executed_size, process* process_array, int process_array_size) {
-    bool equal = false;
-    if(executed != NULL && process_array != NULL) {
-        for(int i=0; i<process_array_size; i++) {
-        equal = false;
-        for(int j=0; j<executed_size; j++) {
-            if(strncmp(process_array[i].name, executed[i].name, sizeof(process_array[i].name)) == 0) {
-                equal = true;
-            } 
+    bool equal = true;  
+
+    if (executed != NULL && process_array != NULL) {
+        for (int i = 0; i < process_array_size; i++) {
+            bool process_executed = false;
+
+            for (int j = 0; j < executed_size; j++) {
+                if (strncmp(process_array[i].name, executed[j].name, sizeof(process_array[i].name)) == 0) {
+                    process_executed = true;
+                    break; 
+                }
+            }
+
+            if (!process_executed) {
+                equal = false;
+                break; 
+            }
         }
+    } else {
+        equal = false;
     }
-    }
-   
+
     return equal;
 }
