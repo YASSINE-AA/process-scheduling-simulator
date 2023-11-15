@@ -111,7 +111,50 @@ process* next_available(process* available_processes, int number_available_proce
 
 
 
+process* next_available_p(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
+    if(available_processes != NULL) {
+           process* earliest = &available_processes[0];
+    if(is_in_old_list(*earliest, in_queue, proc_in_queue)) {
+        earliest = NULL;
+    }
+    for(int i=0; i<number_available_processes; i++) {
+        if(in_queue == NULL && earliest != NULL) {
+            if(available_processes[i].priority < earliest->priority) {
+                earliest = &available_processes[i];
+            }
+        } else {
+            if(!is_in_old_list(available_processes[i], in_queue, proc_in_queue)) {
+                if(earliest == NULL) {
+                    earliest = &available_processes[i];
+                } else {
+                    if(available_processes[i].priority <= earliest->priority) {
+                        earliest = &available_processes[i];
+                    }
+                }
+            }
+    }
+    }
 
+    return earliest;
+    }
+
+    return NULL;
+ 
+}
+
+
+void remove_element(process *arr, int *size, process element) {
+    int i, j;
+    for (i = 0; i < *size; i++) {
+        if (strcmp(arr[i].name,element.name) == 0) {
+            for (j = i; j < *size - 1; j++) {
+                arr[j] = arr[j + 1];
+            }
+           (*size)--; 
+            break;
+        }
+    }
+}
 process* next_available_sjf(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
     if(available_processes != NULL) {
            process* earliest = &available_processes[0];

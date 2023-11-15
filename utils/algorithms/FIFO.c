@@ -1,33 +1,59 @@
 
-void get_fifo_output(process* process_array, int number_of_process) {
-    int number_available_processes = 0; 
-    int current_time = 0;
-    proc_queue* queue = (proc_queue*)malloc(sizeof(proc_queue));
-
-    if (queue == NULL) {
-        // Handle memory allocation failure
-        return;
+void get_fifo_output(process* process_array, int process_array_size) {
+    printf("============================== FIFO ========================================\n");
+    proc_queue* queue = (proc_queue*) malloc(sizeof(proc_queue));
+    if(queue == NULL) {
+        printf("Allocation error");
     }
-
-    // Initialize the queue
     create_queue(queue);
-    process* available_at_t = who_available(get_latest_time(process_array, number_of_process), process_array, number_of_process, &number_available_processes);
+    int current_time = get_earliest_time(process_array, process_array_size);
+    int last_timestamp = get_last_timestamp(process_array, process_array_size);
+    int new_arrival_size = 0; 
+    int in_queue_size = 0;
+    int num_executed_processes = 0;
+    process* in_queue = (process*) malloc(sizeof(process)*process_array_size);
+   
+    process* executed_processes = (process*) malloc(sizeof(process)*process_array_size);
+    if (executed_processes == NULL) {
+            // Handle memory allocation failure
+            return;
+    }
+    
+    process* new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
+    process* next_proc_in_q = next_available(new_arrival, new_arrival_size, NULL, 0);
 
-    for (int i = 0; i < number_available_processes; i++) {
-        process* active_proc = next_available(available_at_t, number_available_processes, NULL, 0);
-        add_to_queue(queue, *active_proc);
-        active_proc->execution_time = -1;
+
+     while(!is_execution_done(executed_processes, num_executed_processes, process_array, process_array_size)) {
+        if(next_proc_in_q != NULL && new_arrival != NULL) {
+            //Populate queue
+            while(next_proc_in_q != NULL) {
+                add_to_queue(queue, *next_proc_in_q);    
+                in_queue[in_queue_size] = *next_proc_in_q;
+                in_queue_size ++;
+                next_proc_in_q = next_available(new_arrival, new_arrival_size, in_queue, in_queue_size);   
+            }
+
+            //Execute
+            while(!is_queue_empty(queue)) {
+                process executed = remove_from_queue(queue);
+                executed_processes[num_executed_processes] = executed;
+                num_executed_processes++;  
+                printf("%s: [%d -> %d]  | ", executed.name, current_time, current_time + executed.execution_time); 
+                current_time += executed.execution_time;
+                
+             
+            }
+        }   else {
+            current_time++;
+           
+        }     
+        new_arrival = get_new_arrival(current_time, executed_processes, num_executed_processes, process_array, process_array_size, &new_arrival_size);
+        next_proc_in_q = next_available(new_arrival, new_arrival_size, in_queue, in_queue_size);
     }
-    
-    free(available_at_t);
-    
-    // Display the queue
-    while (!is_queue_empty(queue)) {
-        process executed = remove_from_queue(queue);
-        if(!(current_time > executed.arrived_at)) current_time = executed.arrived_at;        
-        printf("%s: [%d -> %d]  | ", executed.name, current_time, current_time + executed.execution_time); 
-        current_time += executed.execution_time;
-    }
-    printf("\n");
-    free(queue); // Free the queue
+ 
+    if(executed_processes != NULL) free(executed_processes);
+    if(new_arrival != NULL) free(new_arrival);
+    if(queue != NULL) free(queue);
+    printf("\n============================== FIFO ========================================\n");
+
 }

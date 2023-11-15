@@ -40,3 +40,16 @@ process remove_from_queue(proc_queue* q) {
     
     return empty_process; // Return a default process if the queue is empty
 }
+
+void sort_queue_priority(proc_queue* q) {
+    for (proc_in_queue* i = q->head; i != NULL; i = i->next) {
+        for (proc_in_queue* j = i->next; j != NULL; j = j->next) {
+            if (i->value.priority > j->value.priority) {
+                process temp = i->value;
+                i->value = j->value;
+                j->value = temp;
+            }
+        }
+    }
+}
+
