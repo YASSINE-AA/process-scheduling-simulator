@@ -1,6 +1,7 @@
 
-void get_fifo_output(process* process_array, int process_array_size) {
-    printf("============================== FIFO ========================================\n");
+
+ExecutedTask* get_fifo_output(process* process_array, int process_array_size, int* executed_tasks_size) {
+    *executed_tasks_size = 0;
     proc_queue* queue = (proc_queue*) malloc(sizeof(proc_queue));
     if(queue == NULL) {
         printf("Allocation error");
@@ -16,12 +17,12 @@ void get_fifo_output(process* process_array, int process_array_size) {
     process* executed_processes = (process*) malloc(sizeof(process)*process_array_size);
     if (executed_processes == NULL) {
             // Handle memory allocation failure
-            return;
+            return NULL;
     }
     
     process* new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
     process* next_proc_in_q = next_available(new_arrival, new_arrival_size, NULL, 0);
-
+    ExecutedTask* executed_tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*process_array_size);
 
      while(!is_execution_done(executed_processes, num_executed_processes, process_array, process_array_size)) {
         if(next_proc_in_q != NULL && new_arrival != NULL) {
@@ -38,7 +39,14 @@ void get_fifo_output(process* process_array, int process_array_size) {
                 process executed = remove_from_queue(queue);
                 executed_processes[num_executed_processes] = executed;
                 num_executed_processes++;  
-                printf("%s: [%d -> %d]  | ", executed.name, current_time, current_time + executed.execution_time); 
+                ExecutedTask executed_task;
+                executed_task.start = current_time;
+                executed_task.finish = current_time + executed.execution_time;
+                executed_task.label = (const char*) strdup(executed.name);
+             
+                executed_tasks[*executed_tasks_size] = executed_task;
+                (*executed_tasks_size)++;
+
                 current_time += executed.execution_time;
                 
              
@@ -54,6 +62,5 @@ void get_fifo_output(process* process_array, int process_array_size) {
     if(executed_processes != NULL) free(executed_processes);
     if(new_arrival != NULL) free(new_arrival);
     if(queue != NULL) free(queue);
-    printf("\n============================== FIFO ========================================\n");
-
+    return executed_tasks;
 }

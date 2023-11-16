@@ -33,3 +33,11 @@ typedef struct proc_queue
     struct proc_in_queue* head;
     
 } proc_queue;
+
+typedef struct
+{
+    int start;
+    int finish;
+    const char* label;
+    int color[4];
+} ExecutedTask;

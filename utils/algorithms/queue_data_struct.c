@@ -53,3 +53,15 @@ void sort_queue_priority(proc_queue* q) {
     }
 }
 
+void sort_queue_sjf(proc_queue* q) {
+    for (proc_in_queue* i = q->head; i != NULL; i = i->next) {
+        for (proc_in_queue* j = i->next; j != NULL; j = j->next) {
+            if (i->value.execution_time > j->value.execution_time) {
+                process temp = i->value;
+                i->value = j->value;
+                j->value = temp;
+            }
+        }
+    }
+}
+

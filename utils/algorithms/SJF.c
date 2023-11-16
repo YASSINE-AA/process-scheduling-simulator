@@ -50,6 +50,7 @@ void get_sjf_output(process* process_array, int process_array_size) {
                         in_queue_size ++;
                         next_proc_in_q = next_available_sjf(new_arrival, new_arrival_size,  in_queue, in_queue_size);
                     }
+                    
                 }
              
             }

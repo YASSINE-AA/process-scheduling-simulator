@@ -1,5 +1,8 @@
 
 
+
+
+
 void get_priority_output(process *process_array, int process_array_size, bool is_preemptive)
 {
     printf("============================== PRIORITY ========================================\n");
@@ -62,8 +65,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                 while(next_proc_in_q != NULL) {
                
                   if(next_proc_in_q->priority < to_be_executed.priority) {
-                    if(next_proc_in_q->arrived_at - current_time < to_be_executed.execution_time) {
-                        
+                    if(next_proc_in_q->arrived_at - current_time < to_be_executed.execution_time) {   
                         to_be_executed.execution_time -= next_proc_in_q->arrived_at - current_time;
                         add_to_queue(queue, *next_proc_in_q);
                         in_queue[in_queue_size] = *next_proc_in_q;
