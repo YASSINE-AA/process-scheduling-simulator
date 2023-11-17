@@ -1,6 +1,6 @@
 ExecutedTask* get_srt_output(process* process_array, int process_array_size, int* tasks_size) {
     *tasks_size = 0;
-    ExecutedTask* tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*process_array_size);
+    ExecutedTask* tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*100);
 
     proc_queue* queue = (proc_queue*) malloc(sizeof(proc_queue));
     if(queue == NULL) {
@@ -79,6 +79,7 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
             task.start = current_time;
             task.finish = current_time + to_be_executed.execution_time;
             task.label = (const char*) strdup(to_be_executed.name);
+
             tasks[*tasks_size] = task;
             (*tasks_size)++;
             printf("%d \n", *tasks_size);

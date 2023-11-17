@@ -22,7 +22,7 @@ ExecutedTask* get_fifo_output(process* process_array, int process_array_size, in
     
     process* new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
     process* next_proc_in_q = next_available(new_arrival, new_arrival_size, NULL, 0);
-    ExecutedTask* executed_tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*process_array_size);
+    ExecutedTask* executed_tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*100);
 
      while(!is_execution_done(executed_processes, num_executed_processes, process_array, process_array_size)) {
         if(next_proc_in_q != NULL && new_arrival != NULL) {
