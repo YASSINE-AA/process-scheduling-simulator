@@ -155,7 +155,7 @@ void remove_element(process *arr, int *size, process element) {
         }
     }
 }
-process* next_available_sjf(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
+process* next_available_srt(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
     if(available_processes != NULL) {
            process* earliest = &available_processes[0];
     if(is_in_old_list(*earliest, in_queue, proc_in_queue)) {

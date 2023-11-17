@@ -1,3 +1,5 @@
+//gcc gui.c -o gui `pkg-config --cflags --libs gtk+-3.0` -lcjson
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdlib.h>
@@ -14,11 +16,11 @@
 
 // ALGORITHMS
 #include "./utils/algorithms/useful.c"
-#include "./utils/algorithms/SJF.c"
 #include "./utils/algorithms/round_robin.c"
 #include "./utils/algorithms/FIFO.c"
 #include "./utils/algorithms/priority.c"
 #include "./utils/algorithms/multilevel.c"
+#include "./utils/algorithms/SRT.c"
 
 // File generation
 #include "./utils/generation/generation.c"
@@ -115,7 +117,7 @@ typedef enum
     PRIORITY,
     PRIORITY_P,
     RR,
-    SJF
+    SRT
 } Algorithm;
 
 Algorithm current_algorithm = FIFO;
@@ -239,6 +241,7 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
 // Main function
 int main(int argc, char *argv[])
 {
+    printf("test");
    
       if (argc < 2) {
         printf("Please input the config file.\n");
@@ -252,13 +255,13 @@ int main(int argc, char *argv[])
          generate_config_file(ops);
          return 0;
         } 
-    
+ 
         // Lire fichier configuration
         process* proc_head = read_config_file(argv[1]);
      
-            
-            ExecutedTask* task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
            
+            ExecutedTask* task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
+         
             if(task != NULL) {
                  for(int i=0; i<executed_tasks_size; i++) {
                 tasks[i] = task[i];

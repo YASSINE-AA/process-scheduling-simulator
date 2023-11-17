@@ -5,6 +5,7 @@
         "string.h": "c",
         "stdio.h": "c",
         "cjson.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "SRT.C": "cpp"
     }
 }

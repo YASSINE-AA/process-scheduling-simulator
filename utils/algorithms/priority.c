@@ -59,7 +59,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
         {
             while(!is_queue_empty(queue)) {
                 process to_be_executed = remove_from_queue(queue);
-        
+                remove_element(in_queue, &in_queue_size, to_be_executed);
                 new_arrival = get_new_arrival(current_time + to_be_executed.execution_time, executed_processes, num_executed_processes, process_array, process_array_size, &new_arrival_size);
                 next_proc_in_q = next_available_p(new_arrival, new_arrival_size, in_queue, in_queue_size);
                 while(next_proc_in_q != NULL) {
