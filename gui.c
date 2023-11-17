@@ -30,6 +30,9 @@ const char* filename = "generated_config.json";
 int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
+process* proc_head;
+GtkWidget *window, *drawing_area, *vbox;
+        options ops;
 
 process* read_config_file(const char* filename) {
     process* process_array = malloc(12 * sizeof(process)); 
@@ -164,7 +167,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         double y = i * bar_height;
         double task_width = (tasks[i].finish - tasks[i].start) * bar_width;
 
-        cairo_set_source_rgba(cr, 1, 1, 0, 1);
+        cairo_set_source_rgba(cr, 0, 0, 1, 0.4);
         cairo_rectangle(cr, x, y, task_width, bar_height);
         cairo_fill_preserve(cr);
 
@@ -188,48 +191,102 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     return FALSE;
 }
-
-static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer user_data)
+static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
 {
-    GtkWidget *drawing_area = GTK_WIDGET(user_data);
+    ExecutedTask *task;
+    executed_tasks_size = 0;
 
-    if (g_strcmp0(gtk_menu_item_get_label(menuitem), "First Come First Serve (FIFO)") == 0)
-    {
-          printf("fifo it is");
-        current_algorithm = FIFO;
-    }
-    else if (g_strcmp0(gtk_menu_item_get_label(menuitem), "Round Robin") == 0)
-    {
-      
-        current_algorithm = RR;
-    } else if(g_strcmp0(gtk_menu_item_get_label(menuitem), "Priority (preemptive)") == 0) {
-        current_algorithm = PRIORITY_P;
-    } else if(g_strcmp0(gtk_menu_item_get_label(menuitem), "Priority (non-preemptive)") == 0) {
-        current_algorithm = PRIORITY;
+    switch (GPOINTER_TO_INT(fnc)) {
+        case FIFO:
+
+            task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
+
+            if (task != NULL) {
+                for (int i = 0; i < executed_tasks_size; i++) {
+                    tasks[i] = task[i];
+                }
+                gtk_widget_queue_draw(drawing_area);
+            }
+            if(task != NULL) free(task);
+               
+            break; 
+        case SRT:
+
+            task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
+            if (task != NULL) {
+                for (int i = 0; i < executed_tasks_size; i++) {
+                    tasks[i] = task[i];
+                }
+                gtk_widget_queue_draw(drawing_area);
+            } 
+            if(task != NULL) free(task);
+
+            break; 
+        case PRIORITY_P:
+
+        task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
+        if (task != NULL) {
+            for (int i = 0; i < executed_tasks_size; i++) {
+            tasks[i] = task[i];
+            }
+            gtk_widget_queue_draw(drawing_area);
+        } 
+        if(task != NULL) free(task);
+
+        break; 
+        case PRIORITY:
+
+        task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
+        if (task != NULL) {
+            for (int i = 0; i < executed_tasks_size; i++) {
+            tasks[i] = task[i];
+            }
+            gtk_widget_queue_draw(drawing_area);
+        } 
+        if(task != NULL) free(task);
+
+        break; 
+         case RR:
+
+        task = get_round_robin_output(ops.quantum, proc_head, config_file_size,  &executed_tasks_size);
+        if (task != NULL) {
+            for (int i = 0; i < executed_tasks_size; i++) {
+            tasks[i] = task[i];
+            }
+            gtk_widget_queue_draw(drawing_area);
+        } 
+        if(task != NULL) free(task);
+
+        break; 
+
+        default: 
+            break;
     }
 
-    gtk_widget_queue_draw(drawing_area);
+ 
 }
 
 // Create the menu
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
-   
     GtkWidget *menubar, *menu, *menuitem;
     menubar = gtk_menu_bar_new();
     menu = gtk_menu_new();
     menuitem = gtk_menu_item_new_with_label("First Come First Serve (FIFO)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), drawing_area);
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(FIFO));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Priority (preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), drawing_area);
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(PRIORITY_P));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Priority (non-preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), drawing_area);
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(PRIORITY));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-       menuitem = gtk_menu_item_new_with_label("Round Robin");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), drawing_area);
+    menuitem = gtk_menu_item_new_with_label("Round Robin");
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(RR));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    menuitem = gtk_menu_item_new_with_label("SRT");
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(SRT));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Algorithm");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
@@ -247,7 +304,6 @@ int main(int argc, char *argv[])
         printf("Please input the config file.\n");
     } else {
 
-        options ops;
         ops.algorithm = 10;
         ops.quantum = 3;
            
@@ -257,22 +313,17 @@ int main(int argc, char *argv[])
         } 
  
         // Lire fichier configuration
-        process* proc_head = read_config_file(argv[1]);
-     
-           
-            ExecutedTask* task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
-         
-            if(task != NULL) {
-                 for(int i=0; i<executed_tasks_size; i++) {
-                tasks[i] = task[i];
-            }
-            }
-           
+         proc_head = read_config_file(argv[1]);
+         ExecutedTask* task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
 
-
+            if (task != NULL) {
+                for (int i = 0; i < executed_tasks_size; i++) {
+                    tasks[i] = task[i];
+                }
+            }
+               
     }
   
-    GtkWidget *window, *drawing_area, *vbox;
 
     gtk_init(&argc, &argv);
 
@@ -297,6 +348,8 @@ int main(int argc, char *argv[])
     gtk_widget_show_all(window);
 
     gtk_main();
-
+    if(proc_head != NULL) {
+        free(proc_head);
+    }
     return 0;
 }

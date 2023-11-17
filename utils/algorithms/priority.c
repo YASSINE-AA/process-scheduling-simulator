@@ -1,15 +1,13 @@
+ExecutedTask* get_priority_output(process *process_array, int process_array_size, bool is_preemptive, int* tasks_size)
+{   
+     *tasks_size = 0;
+    ExecutedTask* tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*100);
 
-
-
-
-
-void get_priority_output(process *process_array, int process_array_size, bool is_preemptive)
-{
-    printf("============================== PRIORITY ========================================\n");
     proc_queue *queue = (proc_queue *)malloc(sizeof(proc_queue));
     if (queue == NULL)
     {
         printf("Allocation error");
+        return NULL;
     }
     create_queue(queue);
     int current_time = get_earliest_time(process_array, process_array_size);
@@ -23,7 +21,7 @@ void get_priority_output(process *process_array, int process_array_size, bool is
     if (executed_processes == NULL)
     {
         // Handle memory allocation failure
-        return;
+        return NULL;
     }
 
     process *new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
@@ -51,7 +49,13 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                 remove_element(in_queue, &in_queue_size, executed);
                 executed_processes[num_executed_processes] = executed;
                 num_executed_processes++;
-                printf("%s: [%d -> %d]  | ", executed.name, current_time, current_time + executed.execution_time);
+                 ExecutedTask task;
+                task.start = current_time;
+                task.finish = current_time + executed.execution_time;
+                task.label = (const char*) strdup(executed.name);
+
+                tasks[*tasks_size] = task;
+                (*tasks_size)++;
                 current_time += executed.execution_time;
             }
         }
@@ -59,7 +63,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
         {
             while(!is_queue_empty(queue)) {
                 process to_be_executed = remove_from_queue(queue);
-                remove_element(in_queue, &in_queue_size, to_be_executed);
+
                 new_arrival = get_new_arrival(current_time + to_be_executed.execution_time, executed_processes, num_executed_processes, process_array, process_array_size, &new_arrival_size);
                 next_proc_in_q = next_available_p(new_arrival, new_arrival_size, in_queue, in_queue_size);
                 while(next_proc_in_q != NULL) {
@@ -97,7 +101,13 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                 remove_element(in_queue, &in_queue_size, to_be_executed);
                 executed_processes[num_executed_processes] = to_be_executed;
                 num_executed_processes++;
-                printf("%s: [%d -> %d]  | ",  to_be_executed.name, current_time, current_time +  to_be_executed.execution_time);
+               ExecutedTask task;
+            task.start = current_time;
+            task.finish = current_time + to_be_executed.execution_time;
+            task.label = (const char*) strdup(to_be_executed.name);
+
+            tasks[*tasks_size] = task;
+            (*tasks_size)++;
                 current_time +=  to_be_executed.execution_time;
                 
             }
@@ -135,5 +145,5 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
         free(new_arrival);
     if (queue != NULL)
         free(queue);
-    printf("\n============================== PRIORITY ========================================\n");
+    return tasks;
 }

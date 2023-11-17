@@ -82,7 +82,6 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
 
             tasks[*tasks_size] = task;
             (*tasks_size)++;
-            printf("%d \n", *tasks_size);
           
             current_time +=  to_be_executed.execution_time;
 
