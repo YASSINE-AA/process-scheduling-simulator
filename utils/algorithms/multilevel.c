@@ -68,9 +68,7 @@ void get_multilevel_output(int quantum, process* process_array, int number_of_pr
                     add_to_queue(queue, executed);
                     
 
-                } 
-                printf("%s [%d -> %d] | ", executed.name, old_counter, counter);
-                
+                }                 
             }
             }
 

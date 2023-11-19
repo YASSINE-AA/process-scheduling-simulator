@@ -36,7 +36,7 @@ int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
-GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window;
+GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table;
 options ops;
 
 process *read_config_file(const char *filename)
@@ -213,9 +213,119 @@ void load_algorithm(Algorithm fnc)
 
     gtk_widget_queue_draw(drawing_area);
 }
+GtkWidget* draw_metrics_table() {
+        GtkWidget *table = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(table), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(table), 40);
+    // Header labels
+    GtkWidget *label1 = gtk_label_new("Process Name");
+    gtk_widget_set_halign(label1, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label1, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label1, 0, 0, 1, 1);
+
+    GtkWidget *label2 = gtk_label_new("Waiting time");
+    gtk_widget_set_halign(label2, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label2, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label2, 1, 0, 1, 1);
+
+    GtkWidget *label3 = gtk_label_new("Rotation time");
+    gtk_widget_set_halign(label3, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label3, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label3, 2, 0, 1, 1);
+
+    // Data labels (replace the placeholders accordingly)
+   
+    int row = 1;
+    int col = 1;
+    int total_rotation_time = 0;
+    int total_waiting_time = 0;
+    for(int i=0; i<config_file_size; i++) {
+        GtkWidget *label4 = gtk_label_new(proc_head[i].name); // Process name placeholder
+        gtk_widget_set_halign(label4, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label4, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label4, 0, row, 1, 1);
+
+        char waiting_string[20]; // Allocate memory for waiting_string
+        int waiting_time = get_waiting_time(proc_head[i].name, tasks, executed_tasks_size, proc_head, config_file_size);
+        total_waiting_time += waiting_time;
+        sprintf(waiting_string, "%d", waiting_time);
+        GtkWidget *label5 = gtk_label_new(waiting_string); // Waiting time placeholder
+        gtk_widget_set_halign(label5, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label5, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label5, 1, row, 1, 1);
+
+        char rotation_string[20]; // Allocate memory for rotation_string
+        int rotation_time = get_rotation_time(proc_head[i].name, tasks, executed_tasks_size);
+        total_rotation_time += rotation_time;
+        sprintf(rotation_string, "%d", rotation_time);
+        GtkWidget *label6 = gtk_label_new(rotation_string); // Rotation time placeholder
+        gtk_widget_set_halign(label6, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label6, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label6, 2, row, 1, 1);
+
+    row++;
+    }
+        gtk_window_set_default_size(GTK_WINDOW(metrics_window), 300, 10 * row);
+        GtkWidget *total_label = gtk_label_new("Average: "); // Process name placeholder
+        gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
+
+        char total_waiting_string[20]; // Allocate memory for waiting_string
+        sprintf(total_waiting_string, "%.2f units", (float) total_waiting_time/(config_file_size));
+        GtkWidget *total_waiting_label = gtk_label_new(total_waiting_string); // Waiting time placeholder
+        gtk_widget_set_halign(total_waiting_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_waiting_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_waiting_label, 1, row, 1, 1);
+
+        char total_rotation_string[20]; // Allocate memory for rotation_string
+        sprintf(total_rotation_string, "%.2f units", (float) total_rotation_time/(config_file_size));
+        GtkWidget *total_rotation_label = gtk_label_new(total_rotation_string); // Rotation time placeholder
+        gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
+        return table;
+}
+
+void show_metrics_window() {
+    metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
+    gtk_window_set_resizable (GTK_WINDOW(metrics_window), FALSE);
+    metrics_table = draw_metrics_table();
+    gtk_container_add(GTK_CONTAINER(metrics_window), metrics_table);
+    gtk_widget_show_all(metrics_window);
+}
+
+void close_metrics_window() {
+    gtk_window_close(GTK_WINDOW(metrics_window));
+}
+
+void update_metrics_window() {
+    if (metrics_window == NULL || metrics_table == NULL) {
+        return;
+    }
+
+    gtk_widget_set_visible(metrics_table, TRUE); 
+    gtk_container_remove(GTK_CONTAINER(metrics_window), metrics_table);
+    if (metrics_table != NULL) {
+        gtk_widget_destroy(metrics_table);
+    }
+
+    metrics_table = draw_metrics_table();
+
+    if (metrics_table != NULL) {
+        gtk_container_add(GTK_CONTAINER(metrics_window), metrics_table);
+        gtk_widget_show_all(metrics_window);  
+        gtk_widget_queue_draw(GTK_WIDGET(metrics_table));
+    } else {
+        g_print("Error creating metrics table\n");
+    }
+}
+
 static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
 {
     load_algorithm(GPOINTER_TO_INT(fnc));
+    update_metrics_window();
 }
 static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
@@ -284,89 +394,6 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     return FALSE;
 }
 
-void show_metrics_window() {
-    metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(metrics_window), 600, 400);
-    gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
-    GtkWidget *table = gtk_grid_new();
-    gtk_grid_set_row_spacing(GTK_GRID(table), 10);
-    gtk_grid_set_column_spacing(GTK_GRID(table), 40);
-    gtk_container_add(GTK_CONTAINER(metrics_window), table);
-
-    // Header labels
-    GtkWidget *label1 = gtk_label_new("Process Name");
-    gtk_widget_set_halign(label1, GTK_ALIGN_CENTER);
-    gtk_widget_set_valign(label1, GTK_ALIGN_FILL);
-    gtk_grid_attach(GTK_GRID(table), label1, 0, 0, 1, 1);
-
-    GtkWidget *label2 = gtk_label_new("Waiting time");
-    gtk_widget_set_halign(label2, GTK_ALIGN_CENTER);
-    gtk_widget_set_valign(label2, GTK_ALIGN_FILL);
-    gtk_grid_attach(GTK_GRID(table), label2, 1, 0, 1, 1);
-
-    GtkWidget *label3 = gtk_label_new("Rotation time");
-    gtk_widget_set_halign(label3, GTK_ALIGN_CENTER);
-    gtk_widget_set_valign(label3, GTK_ALIGN_FILL);
-    gtk_grid_attach(GTK_GRID(table), label3, 2, 0, 1, 1);
-
-    // Data labels (replace the placeholders accordingly)
-   
-    int row = 1;
-    int col = 1;
-    int total_rotation_time = 0;
-    int total_waiting_time = 0;
-    for(int i=0; i<config_file_size; i++) {
-        GtkWidget *label4 = gtk_label_new(proc_head[i].name); // Process name placeholder
-        gtk_widget_set_halign(label4, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(label4, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), label4, 0, row, 1, 1);
-
-        char waiting_string[20]; // Allocate memory for waiting_string
-        int waiting_time = get_waiting_time(proc_head[i].name, tasks, executed_tasks_size, proc_head, config_file_size);
-        total_waiting_time += waiting_time;
-        sprintf(waiting_string, "%d", waiting_time);
-        GtkWidget *label5 = gtk_label_new(waiting_string); // Waiting time placeholder
-        gtk_widget_set_halign(label5, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(label5, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), label5, 1, row, 1, 1);
-
-        char rotation_string[20]; // Allocate memory for rotation_string
-        int rotation_time = get_rotation_time(proc_head[i].name, tasks, executed_tasks_size);
-        total_rotation_time += rotation_time;
-        sprintf(rotation_string, "%d", rotation_time);
-        GtkWidget *label6 = gtk_label_new(rotation_string); // Rotation time placeholder
-        gtk_widget_set_halign(label6, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(label6, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), label6, 2, row, 1, 1);
-
-    row++;
-    }
-     
-        GtkWidget *total_label = gtk_label_new("Average: "); // Process name placeholder
-        gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
-
-        char total_waiting_string[20]; // Allocate memory for waiting_string
-        sprintf(total_waiting_string, "%.2f", (float) total_waiting_time/(config_file_size));
-        GtkWidget *total_waiting_label = gtk_label_new(total_waiting_string); // Waiting time placeholder
-        gtk_widget_set_halign(total_waiting_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_waiting_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_waiting_label, 1, row, 1, 1);
-
-        char total_rotation_string[20]; // Allocate memory for rotation_string
-        sprintf(total_rotation_string, "%.2f", (float) total_rotation_time/(config_file_size));
-        GtkWidget *total_rotation_label = gtk_label_new(total_rotation_string); // Rotation time placeholder
-        gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
-        
-      
-
-
-   
-    gtk_widget_show_all(metrics_window);
-}
 
 
 void show_message_box_()
@@ -395,6 +422,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
         {
             show_message_box_();
             load_algorithm(current_algorithm);
+        
             gtk_widget_queue_draw(drawing_area);
         }
 

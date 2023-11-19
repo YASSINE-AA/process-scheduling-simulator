@@ -44,6 +44,7 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
                 next_proc_in_q = next_available_srt(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
 
                 while (next_proc_in_q != NULL) {
+                    
                     if (to_be_executed.execution_time > next_proc_in_q->execution_time) {
                         if (next_proc_in_q->arrived_at - current_time < to_be_executed.execution_time) {
                             to_be_executed.execution_time -= next_proc_in_q->arrived_at - current_time;
@@ -62,10 +63,11 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
                             sort_queue_srt(queue);
                         }
                     } else {
-                        add_to_queue(queue, *next_proc_in_q);
-                        in_queue[in_queue_size] = *next_proc_in_q;
-                        in_queue_size++;
-                        sort_queue_srt(queue);
+                             add_to_queue(queue, *next_proc_in_q);
+                            in_queue[in_queue_size] = *next_proc_in_q;
+                            in_queue_size++;
+                            sort_queue_srt(queue);
+                           
                     }
                     next_proc_in_q = next_available_srt(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
                 }
@@ -84,8 +86,7 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
                     tasks[*tasks_size] = task;
                     (*tasks_size)++;
                 } else {
-                    // Handle the case where tasks array is full
-                    // You may want to reallocate or handle this situation appropriately
+                    
                 }
 
                 current_time += to_be_executed.execution_time;

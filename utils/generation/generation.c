@@ -19,7 +19,6 @@ void write_to_config(const char* content) {
     FILE *fptr = fopen("generated_config.json", "w");
     fprintf(fptr,"%s",content);
     fclose(fptr);
-    printf("Config file successfully generated!\n");
 }
 
 void *generate_config_file(options ops) {
@@ -93,24 +92,5 @@ void *generate_config_file(options ops) {
 end:
     cJSON_Delete(config_file);
     const char* config_file_name = "generated_config.json";
-  
-    // Create file
-   /*if(access(config_file_name, F_OK) == 0) {
-        char userChoice;
-        // exists
-        printf("Config file has already been generated!\n");
-        printf("Do you want to regenerate it? [Y/N]");
-        scanf("%c", &userChoice);
-        if(toupper(userChoice) == 'Y') {
-            } else if(toupper(userChoice) == 'N') {
-            
-        } else {
-            printf("Wrong parameter!\n");
-        }
-    } else {
-       write_to_config(string);
-    }  
-            */ 
-            write_to_config(string);
-        
+    write_to_config(string);
 }
