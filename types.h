@@ -36,6 +36,7 @@ typedef struct proc_queue
 
 typedef struct
 {
+    int arrival_time;
     int start;
     int finish;
     const char* label;

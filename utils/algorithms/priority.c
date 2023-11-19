@@ -43,6 +43,8 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                 executed_processes[num_executed_processes] = executed;
                 num_executed_processes++;
                  ExecutedTask task;
+                task.arrival_time = executed.arrived_at;
+
                 task.start = current_time;
                 task.finish = current_time + executed.execution_time;
                 task.label = (const char*) strdup(executed.name);
@@ -95,6 +97,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                 executed_processes[num_executed_processes] = to_be_executed;
                 num_executed_processes++;
                ExecutedTask task;
+                        task.arrival_time = to_be_executed.arrived_at;
             task.start = current_time;
             task.finish = current_time + to_be_executed.execution_time;
             task.label = (const char*) strdup(to_be_executed.name);

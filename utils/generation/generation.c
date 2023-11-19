@@ -8,9 +8,9 @@ int rand_dim = 20;
 void create_random_process_array(process processes[rand_dim]) {
     srand(time(NULL)); 
     for (int i = 0; i < rand_dim; i++) {
-        processes[i].arrived_at = rand() % 45;
-        processes[i].execution_time = rand() % 10;
-        processes[i].priority = rand() % 10;
+        processes[i].arrived_at = rand() % 45 + 1;
+        processes[i].execution_time = rand() % 10 + 1;
+        processes[i].priority = rand() % 10 + 1;
         snprintf(processes[i].name, sizeof(processes[i].name), "p%d", i + 1);
     }
 }

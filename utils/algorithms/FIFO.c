@@ -35,6 +35,7 @@ ExecutedTask* get_fifo_output(process* process_array, int process_array_size, in
                 executed_processes[num_executed_processes] = executed;
                 num_executed_processes++;  
                 ExecutedTask executed_task;
+                executed_task.arrival_time = executed.arrived_at;
                 executed_task.start = current_time;
                 executed_task.finish = current_time + executed.execution_time;
                 executed_task.label = (const char*) strdup(executed.name);

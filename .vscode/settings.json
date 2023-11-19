@@ -6,6 +6,7 @@
         "stdio.h": "c",
         "cjson.h": "c",
         "stdbool.h": "c",
-        "SRT.C": "cpp"
+        "SRT.C": "cpp",
+        "cerrno": "c"
     }
 }

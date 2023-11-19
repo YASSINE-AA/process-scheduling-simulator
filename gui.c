@@ -2,8 +2,6 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-
-
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdlib.h>
@@ -26,6 +24,9 @@
 #include "./utils/algorithms/multilevel.c"
 #include "./utils/algorithms/SRT.c"
 
+// Metrics
+#include "./utils/metrics/metrics.c"
+
 // File generation
 #include "./utils/generation/generation.c"
 
@@ -35,11 +36,12 @@ int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
-GtkWidget *window, *drawing_area, *vbox;
+GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window;
 options ops;
 
 process *read_config_file(const char *filename)
 {
+    config_file_size = 0;
     process *process_array = malloc(12 * sizeof(process));
     if (process_array == NULL)
     {
@@ -122,7 +124,8 @@ process *read_config_file(const char *filename)
     return process_array;
 }
 // Options
-enum {
+enum
+{
     GEN_FILE
 };
 
@@ -137,8 +140,83 @@ typedef enum
     SRT
 } Algorithm;
 
-Algorithm current_algorithm = FIFO;
+Algorithm current_algorithm = SRT;
+char *concat(const char *s1, const char *s2)
+{
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    if (result == NULL)
+    {
+        printf("Err alloc");
+        exit(-1);
+    }
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+void load_algorithm(Algorithm fnc)
+{
+    ExecutedTask *task = NULL;
+    executed_tasks_size = 0;
+    char *window_name_suffix = "";
 
+    switch (fnc)
+    {
+    case FIFO:
+        task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
+        current_algorithm = FIFO;
+        window_name_suffix = " (FIFO)";
+        break;
+
+    case SRT:
+        task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
+        current_algorithm = SRT;
+        window_name_suffix = " (SRT)";
+
+        break;
+
+    case PRIORITY_P:
+        task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
+        current_algorithm = PRIORITY_P;
+        window_name_suffix = " (PRIORITY PREEMPTIVE)";
+
+        break;
+
+    case PRIORITY:
+        task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
+        current_algorithm = PRIORITY;
+        window_name_suffix = " (PRIORITY NON-PREEMPTIVE)";
+
+        break;
+
+    case RR:
+        task = get_round_robin_output(ops.quantum, proc_head, config_file_size, &executed_tasks_size);
+        current_algorithm = RR;
+        window_name_suffix = " (RR)";
+
+        break;
+
+    default:
+        break;
+    }
+
+    gtk_window_set_title(GTK_WINDOW(window), concat("Process Scheduler ", window_name_suffix));
+
+    if (task != NULL)
+    {
+        for (int i = 0; i < executed_tasks_size; i++)
+        {
+            tasks[i] = task[i];
+        }
+
+        free(task);
+    }
+
+    gtk_widget_queue_draw(drawing_area);
+}
+static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
+{
+    load_algorithm(GPOINTER_TO_INT(fnc));
+}
 static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
     gint width = gtk_widget_get_allocated_width(widget);
@@ -206,60 +284,123 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     return FALSE;
 }
 
-static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
-{
- switch (GPOINTER_TO_INT(fnc))
-    {
-        case GEN_FILE:
-            generate_config_file(ops);
-            proc_head = read_config_file("generated_config.json");
-            break;
+void show_metrics_window() {
+    metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(metrics_window), 600, 400);
+    gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
+    GtkWidget *table = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(table), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(table), 40);
+    gtk_container_add(GTK_CONTAINER(metrics_window), table);
+
+    // Header labels
+    GtkWidget *label1 = gtk_label_new("Process Name");
+    gtk_widget_set_halign(label1, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label1, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label1, 0, 0, 1, 1);
+
+    GtkWidget *label2 = gtk_label_new("Waiting time");
+    gtk_widget_set_halign(label2, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label2, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label2, 1, 0, 1, 1);
+
+    GtkWidget *label3 = gtk_label_new("Rotation time");
+    gtk_widget_set_halign(label3, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label3, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), label3, 2, 0, 1, 1);
+
+    // Data labels (replace the placeholders accordingly)
+   
+    int row = 1;
+    int col = 1;
+    int total_rotation_time = 0;
+    int total_waiting_time = 0;
+    for(int i=0; i<config_file_size; i++) {
+        GtkWidget *label4 = gtk_label_new(proc_head[i].name); // Process name placeholder
+        gtk_widget_set_halign(label4, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label4, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label4, 0, row, 1, 1);
+
+        char waiting_string[20]; // Allocate memory for waiting_string
+        int waiting_time = get_waiting_time(proc_head[i].name, tasks, executed_tasks_size, proc_head, config_file_size);
+        total_waiting_time += waiting_time;
+        sprintf(waiting_string, "%d", waiting_time);
+        GtkWidget *label5 = gtk_label_new(waiting_string); // Waiting time placeholder
+        gtk_widget_set_halign(label5, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label5, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label5, 1, row, 1, 1);
+
+        char rotation_string[20]; // Allocate memory for rotation_string
+        int rotation_time = get_rotation_time(proc_head[i].name, tasks, executed_tasks_size);
+        total_rotation_time += rotation_time;
+        sprintf(rotation_string, "%d", rotation_time);
+        GtkWidget *label6 = gtk_label_new(rotation_string); // Rotation time placeholder
+        gtk_widget_set_halign(label6, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(label6, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), label6, 2, row, 1, 1);
+
+    row++;
     }
-}static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
-{
-    ExecutedTask *task = NULL;
-    executed_tasks_size = 0;
+     
+        GtkWidget *total_label = gtk_label_new("Average: "); // Process name placeholder
+        gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
 
-    switch (GPOINTER_TO_INT(fnc))
-    {
-        case FIFO:
-            task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
-            break;
+        char total_waiting_string[20]; // Allocate memory for waiting_string
+        sprintf(total_waiting_string, "%.2f", (float) total_waiting_time/(config_file_size));
+        GtkWidget *total_waiting_label = gtk_label_new(total_waiting_string); // Waiting time placeholder
+        gtk_widget_set_halign(total_waiting_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_waiting_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_waiting_label, 1, row, 1, 1);
 
-        case SRT:
-            task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
-            break;
-
-        case PRIORITY_P:
-            task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
-            break;
-
-        case PRIORITY:
-            task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
-            break;
-
-        case RR:
-            task = get_round_robin_output(ops.quantum, proc_head, config_file_size, &executed_tasks_size);
-            break;
-
-        default:
-            break;
-    }
-
-    if (task != NULL)
-    {
-        for (int i = 0; i < executed_tasks_size; i++)
-        {
-            tasks[i] = task[i];
-        }
+        char total_rotation_string[20]; // Allocate memory for rotation_string
+        sprintf(total_rotation_string, "%.2f", (float) total_rotation_time/(config_file_size));
+        GtkWidget *total_rotation_label = gtk_label_new(total_rotation_string); // Rotation time placeholder
+        gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
+        gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
+        gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
+        
       
-      free(task);
-    }
 
 
-    gtk_widget_queue_draw(drawing_area);
+   
+    gtk_widget_show_all(metrics_window);
 }
 
+
+void show_message_box_()
+{
+    GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+    dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+                                    flags,
+                                    GTK_MESSAGE_OTHER,
+                                    GTK_BUTTONS_CLOSE,
+                                    "Successfully generated config file.");
+
+    g_signal_connect_swapped(dialog, "response",
+                             G_CALLBACK(gtk_widget_destroy),
+                             dialog);
+    gtk_widget_show(dialog);
+}
+
+static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
+{
+    switch (GPOINTER_TO_INT(fnc))
+    {
+    case GEN_FILE:
+        generate_config_file(ops);
+        proc_head = read_config_file("generated_config.json");
+        if (proc_head != NULL)
+        {
+            show_message_box_();
+            load_algorithm(current_algorithm);
+            gtk_widget_queue_draw(drawing_area);
+        }
+
+        break;
+    }
+}
 
 // Create the menu
 static GtkWidget *create_menu(GtkWidget *drawing_area)
@@ -289,7 +430,7 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
 
-    //OPTIONS MENU
+    // OPTIONS MENU
     options_menu = gtk_menu_new();
     generate_config = gtk_menu_item_new_with_label("Generate .json config file");
     g_signal_connect(generate_config, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(GEN_FILE));
@@ -310,6 +451,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         printf("Please input the config file.\n");
+        exit(0);
     }
     else
     {
@@ -325,22 +467,14 @@ int main(int argc, char *argv[])
 
         // Lire fichier configuration
         proc_head = read_config_file(argv[1]);
-        ExecutedTask *task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
-
-        if (task != NULL)
-        {
-            for (int i = 0; i < executed_tasks_size; i++)
-            {
-                tasks[i] = task[i];
-            }
-        }
     }
 
     gtk_init(&argc, &argv);
 
     srand(time(NULL));
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Process scheduler");
+  
+    load_algorithm(current_algorithm);
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -355,9 +489,8 @@ int main(int argc, char *argv[])
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw_event), NULL);
 
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
-
     gtk_widget_show_all(window);
-
+    show_metrics_window();
     gtk_main();
     if (proc_head != NULL)
     {
@@ -365,4 +498,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif //SCHEDULER_H
+#endif // SCHEDULER_H

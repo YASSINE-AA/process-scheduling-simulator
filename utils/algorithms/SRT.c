@@ -75,6 +75,7 @@ ExecutedTask* get_srt_output(process* process_array, int process_array_size, int
                 executed_processes_size++;
 
                 ExecutedTask task;
+                        task.arrival_time = to_be_executed.arrived_at;
                 task.start = current_time;
                 task.finish = current_time + to_be_executed.execution_time;
                 task.label = strdup(to_be_executed.name);
