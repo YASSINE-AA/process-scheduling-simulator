@@ -1,4 +1,8 @@
-//gcc gui.c -o gui `pkg-config --cflags --libs gtk+-3.0` -lcjson
+// gcc gui.c -o gui `pkg-config --cflags --libs gtk+-3.0` -lcjson
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
+
+
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -26,36 +30,39 @@
 #include "./utils/generation/generation.c"
 
 // Config filename
-const char* filename = "generated_config.json";
+const char *filename = "generated_config.json";
 int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
-process* proc_head;
+process *proc_head;
 GtkWidget *window, *drawing_area, *vbox;
-        options ops;
+options ops;
 
-process* read_config_file(const char* filename) {
-    process* process_array = malloc(12 * sizeof(process)); 
-    if (process_array == NULL) {
+process *read_config_file(const char *filename)
+{
+    process *process_array = malloc(12 * sizeof(process));
+    if (process_array == NULL)
+    {
         printf("Error: memory allocation failed\n");
         return NULL;
     }
 
-    FILE* fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "r");
 
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         printf("Error: could not open file %s\n", filename);
-        free(process_array); 
+        free(process_array);
         return NULL;
     }
-
 
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char* config = (char*)malloc(file_size + 1);
-    if (config == NULL) {
+    char *config = (char *)malloc(file_size + 1);
+    if (config == NULL)
+    {
         printf("Error: memory allocation failed\n");
         fclose(fp);
         free(process_array);
@@ -67,10 +74,12 @@ process* read_config_file(const char* filename) {
 
     fclose(fp);
 
-    cJSON* config_json = cJSON_Parse(config);
-    if (config_json == NULL) {
-        const char* error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {
+    cJSON *config_json = cJSON_Parse(config);
+    if (config_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
             fprintf(stderr, "Error before: %s\n", error_ptr);
         }
         free(config);
@@ -78,21 +87,25 @@ process* read_config_file(const char* filename) {
         return NULL;
     }
 
-    const cJSON* nested_process = NULL;
-    const cJSON* process_list = NULL;
+    const cJSON *nested_process = NULL;
+    const cJSON *process_list = NULL;
     int status = 0;
 
     process_list = cJSON_GetObjectItemCaseSensitive(config_json, "process");
-    cJSON_ArrayForEach(nested_process, process_list) {
-        cJSON* arrived_at = cJSON_GetObjectItemCaseSensitive(nested_process, "arrived_at");
-        cJSON* execution_time = cJSON_GetObjectItemCaseSensitive(nested_process, "execution_time");
-        cJSON* priority = cJSON_GetObjectItemCaseSensitive(nested_process, "priority");
-        cJSON* name = cJSON_GetObjectItemCaseSensitive(nested_process, "name");
+    cJSON_ArrayForEach(nested_process, process_list)
+    {
+        cJSON *arrived_at = cJSON_GetObjectItemCaseSensitive(nested_process, "arrived_at");
+        cJSON *execution_time = cJSON_GetObjectItemCaseSensitive(nested_process, "execution_time");
+        cJSON *priority = cJSON_GetObjectItemCaseSensitive(nested_process, "priority");
+        cJSON *name = cJSON_GetObjectItemCaseSensitive(nested_process, "name");
 
-        if (!cJSON_IsNumber(arrived_at) || !cJSON_IsNumber(execution_time) || !cJSON_IsNumber(priority) || !cJSON_IsString(name)) {
+        if (!cJSON_IsNumber(arrived_at) || !cJSON_IsNumber(execution_time) || !cJSON_IsNumber(priority) || !cJSON_IsString(name))
+        {
             status = 0;
             break;
-        } else {
+        }
+        else
+        {
             process proc;
             proc.arrived_at = arrived_at->valueint;
             proc.execution_time = execution_time->valueint;
@@ -108,9 +121,10 @@ process* read_config_file(const char* filename) {
     free(config);
     return process_array;
 }
-
-
-
+// Options
+enum {
+    GEN_FILE
+};
 
 // Algorithm options
 typedef enum
@@ -191,106 +205,99 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     return FALSE;
 }
-static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
+
+static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
 {
-    ExecutedTask *task;
+ switch (GPOINTER_TO_INT(fnc))
+    {
+        case GEN_FILE:
+            generate_config_file(ops);
+            proc_head = read_config_file("generated_config.json");
+            break;
+    }
+}static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
+{
+    ExecutedTask *task = NULL;
     executed_tasks_size = 0;
 
-    switch (GPOINTER_TO_INT(fnc)) {
+    switch (GPOINTER_TO_INT(fnc))
+    {
         case FIFO:
-
             task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
+            break;
 
-            if (task != NULL) {
-                for (int i = 0; i < executed_tasks_size; i++) {
-                    tasks[i] = task[i];
-                }
-                gtk_widget_queue_draw(drawing_area);
-            }
-            if(task != NULL) free(task);
-               
-            break; 
         case SRT:
-
             task = get_srt_output(proc_head, config_file_size, &executed_tasks_size);
-            if (task != NULL) {
-                for (int i = 0; i < executed_tasks_size; i++) {
-                    tasks[i] = task[i];
-                }
-                gtk_widget_queue_draw(drawing_area);
-            } 
-            if(task != NULL) free(task);
+            break;
 
-            break; 
         case PRIORITY_P:
+            task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
+            break;
 
-        task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
-        if (task != NULL) {
-            for (int i = 0; i < executed_tasks_size; i++) {
-            tasks[i] = task[i];
-            }
-            gtk_widget_queue_draw(drawing_area);
-        } 
-        if(task != NULL) free(task);
-
-        break; 
         case PRIORITY:
+            task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
+            break;
 
-        task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
-        if (task != NULL) {
-            for (int i = 0; i < executed_tasks_size; i++) {
-            tasks[i] = task[i];
-            }
-            gtk_widget_queue_draw(drawing_area);
-        } 
-        if(task != NULL) free(task);
+        case RR:
+            task = get_round_robin_output(ops.quantum, proc_head, config_file_size, &executed_tasks_size);
+            break;
 
-        break; 
-         case RR:
-
-        task = get_round_robin_output(ops.quantum, proc_head, config_file_size,  &executed_tasks_size);
-        if (task != NULL) {
-            for (int i = 0; i < executed_tasks_size; i++) {
-            tasks[i] = task[i];
-            }
-            gtk_widget_queue_draw(drawing_area);
-        } 
-        if(task != NULL) free(task);
-
-        break; 
-
-        default: 
+        default:
             break;
     }
 
- 
+    if (task != NULL)
+    {
+        for (int i = 0; i < executed_tasks_size; i++)
+        {
+            tasks[i] = task[i];
+        }
+      
+      free(task);
+    }
+
+
+    gtk_widget_queue_draw(drawing_area);
 }
+
 
 // Create the menu
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
-    GtkWidget *menubar, *menu, *menuitem;
+    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_;
     menubar = gtk_menu_bar_new();
+
+    // ALGORITHMS MENU
     menu = gtk_menu_new();
     menuitem = gtk_menu_item_new_with_label("First Come First Serve (FIFO)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(FIFO));
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(FIFO));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Priority (preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(PRIORITY_P));
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY_P));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Priority (non-preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(PRIORITY));
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Round Robin");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(RR));
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(RR));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("SRT");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected),  GINT_TO_POINTER(SRT));
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SRT));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Algorithm");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
+
+    //OPTIONS MENU
+    options_menu = gtk_menu_new();
+    generate_config = gtk_menu_item_new_with_label("Generate .json config file");
+    g_signal_connect(generate_config, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(GEN_FILE));
+    gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), generate_config);
+    options_ = gtk_menu_item_new_with_label("Options");
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(options_), options_menu);
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), options_);
 
     return menubar;
 }
@@ -299,31 +306,35 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
 int main(int argc, char *argv[])
 {
     printf("test");
-   
-      if (argc < 2) {
+
+    if (argc < 2)
+    {
         printf("Please input the config file.\n");
-    } else {
+    }
+    else
+    {
 
         ops.algorithm = 10;
         ops.quantum = 3;
-           
-       if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0) {
-         generate_config_file(ops);
-         return 0;
-        } 
- 
-        // Lire fichier configuration
-         proc_head = read_config_file(argv[1]);
-         ExecutedTask* task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
 
-            if (task != NULL) {
-                for (int i = 0; i < executed_tasks_size; i++) {
-                    tasks[i] = task[i];
-                }
+        if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0)
+        {
+            generate_config_file(ops);
+            return 0;
+        }
+
+        // Lire fichier configuration
+        proc_head = read_config_file(argv[1]);
+        ExecutedTask *task = get_fifo_output(proc_head, config_file_size, &executed_tasks_size);
+
+        if (task != NULL)
+        {
+            for (int i = 0; i < executed_tasks_size; i++)
+            {
+                tasks[i] = task[i];
             }
-               
+        }
     }
-  
 
     gtk_init(&argc, &argv);
 
@@ -348,8 +359,10 @@ int main(int argc, char *argv[])
     gtk_widget_show_all(window);
 
     gtk_main();
-    if(proc_head != NULL) {
+    if (proc_head != NULL)
+    {
         free(proc_head);
     }
     return 0;
 }
+#endif //SCHEDULER_H

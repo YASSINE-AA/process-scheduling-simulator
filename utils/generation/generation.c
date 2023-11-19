@@ -95,15 +95,14 @@ end:
     const char* config_file_name = "generated_config.json";
   
     // Create file
-    if(access(config_file_name, F_OK) == 0) {
+   /*if(access(config_file_name, F_OK) == 0) {
         char userChoice;
         // exists
         printf("Config file has already been generated!\n");
         printf("Do you want to regenerate it? [Y/N]");
         scanf("%c", &userChoice);
         if(toupper(userChoice) == 'Y') {
-            write_to_config(string);
-        } else if(toupper(userChoice) == 'N') {
+            } else if(toupper(userChoice) == 'N') {
             
         } else {
             printf("Wrong parameter!\n");
@@ -111,4 +110,7 @@ end:
     } else {
        write_to_config(string);
     }  
+            */ 
+            write_to_config(string);
+        
 }

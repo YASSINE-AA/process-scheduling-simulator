@@ -15,15 +15,8 @@ ExecutedTask* get_priority_output(process *process_array, int process_array_size
     int new_arrival_size = 0;
     int in_queue_size = 0;
     int num_executed_processes = 0;
-    process *in_queue = (process *)malloc(sizeof(process) * process_array_size);
-
-    process *executed_processes = (process *)malloc(sizeof(process) * process_array_size);
-    if (executed_processes == NULL)
-    {
-        // Handle memory allocation failure
-        return NULL;
-    }
-
+    process in_queue[process_array_size];
+    process executed_processes[process_array_size];
     process *new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
     process *next_proc_in_q = next_available_p(new_arrival, new_arrival_size, NULL, 0);
 
@@ -125,21 +118,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
 }
 
 
-    if (executed_processes != NULL)
-    {
-        if (num_executed_processes < process_array_size)
-        {
-            process *resized_executed = realloc(executed_processes, sizeof(process) * num_executed_processes);
-            if (resized_executed != NULL)
-            {
-                free(executed_processes);
-            }
-            else
-            {
-                printf("Reallocation failed! \n");
-            }
-        }
-    }
+    
   
     if (new_arrival != NULL)
         free(new_arrival);

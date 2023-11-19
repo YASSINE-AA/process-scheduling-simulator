@@ -12,14 +12,8 @@ ExecutedTask* get_fifo_output(process* process_array, int process_array_size, in
     int new_arrival_size = 0; 
     int in_queue_size = 0;
     int num_executed_processes = 0;
-    process* in_queue = (process*) malloc(sizeof(process)*process_array_size);
-   
-    process* executed_processes = (process*) malloc(sizeof(process)*process_array_size);
-    if (executed_processes == NULL) {
-            // Handle memory allocation failure
-            return NULL;
-    }
-    
+    process executed_processes[process_array_size];
+    process in_queue[process_array_size];
     process* new_arrival = get_new_arrival(current_time, NULL, 0, process_array, process_array_size, &new_arrival_size);
     process* next_proc_in_q = next_available(new_arrival, new_arrival_size, NULL, 0);
     ExecutedTask* executed_tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*100);
@@ -31,6 +25,7 @@ ExecutedTask* get_fifo_output(process* process_array, int process_array_size, in
                 add_to_queue(queue, *next_proc_in_q);    
                 in_queue[in_queue_size] = *next_proc_in_q;
                 in_queue_size ++;
+     
                 next_proc_in_q = next_available(new_arrival, new_arrival_size, in_queue, in_queue_size);   
             }
 
@@ -55,11 +50,12 @@ ExecutedTask* get_fifo_output(process* process_array, int process_array_size, in
             current_time++;
            
         }     
+
         new_arrival = get_new_arrival(current_time, executed_processes, num_executed_processes, process_array, process_array_size, &new_arrival_size);
         next_proc_in_q = next_available(new_arrival, new_arrival_size, in_queue, in_queue_size);
     }
  
-    if(executed_processes != NULL) free(executed_processes);
+   
     if(new_arrival != NULL) free(new_arrival);
     if(queue != NULL) free(queue);
     return executed_tasks;
