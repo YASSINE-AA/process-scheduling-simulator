@@ -87,23 +87,19 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
         {
             process execute = remove_from_pr_queue(queue);
 
-            if (!is_in_old_list(execute, executed, executed_size))
-            {
-                executed[executed_size] = execute;
-                executed_size++;
-            }
+           
             execute.execution_time--;
 
-            if (executed_size == process_array_size)
-            {
-
-                printf("what %s\n", execute.name);
-                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + execute.execution_time, execute.name));
-                break;
-            }
+           
             if (execute.execution_time > 0)
             {
                 add_to_pr_queue(queue, execute);
+            } else {
+            if (!is_in_old_list(execute, executed, executed_size))
+                {
+                executed[executed_size] = execute;
+                executed_size++;
+                }
             }
 
             add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
