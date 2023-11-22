@@ -9,7 +9,6 @@ void create_queue(proc_queue* q) {
 void add_to_queue(proc_queue* q, process proc) {
     proc_in_queue* new_process = (proc_in_queue*)malloc(sizeof(proc_in_queue));
     if (new_process == NULL) {
-        // Handle memory allocation failure
         return;
     }
     new_process->value = proc;
@@ -19,10 +18,28 @@ void add_to_queue(proc_queue* q, process proc) {
         q->head = new_process;
         q->tail = new_process;
     } else {
-        q->tail->next = new_process;
-        q->tail = new_process;
+        if (proc.arrived_at < q->head->value.arrived_at) {
+            new_process->next = q->head;
+            q->head = new_process;
+        } else {
+            proc_in_queue* current = q->head;
+            proc_in_queue* prev = NULL;
+
+            while (current != NULL && proc.arrived_at >= current->value.arrived_at) {
+                prev = current;
+                current = current->next;
+            }
+
+            prev->next = new_process;
+            new_process->next = current;
+
+            if (current == NULL) {
+                q->tail = new_process;
+            }
+        }
     }
 }
+
 
 
 process remove_from_queue(proc_queue* q) {

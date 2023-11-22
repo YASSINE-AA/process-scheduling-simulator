@@ -16,6 +16,10 @@
 #include "./types.h"
 #include "./utils/algorithms/queue_data_struct.c"
 
+// GUI
+#include "./utils/gui/format.c" // fomart data to display as gantt
+ 
+
 // ALGORITHMS
 #include "./utils/algorithms/useful.c"
 #include "./utils/algorithms/round_robin.c"
@@ -140,7 +144,7 @@ typedef enum
     SRT
 } Algorithm;
 
-Algorithm current_algorithm = SRT;
+Algorithm current_algorithm = FIFO;
 char *concat(const char *s1, const char *s2)
 {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
