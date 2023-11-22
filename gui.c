@@ -365,6 +365,8 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     // Draw tasks
     for (int i = 0; i < executed_tasks_size; i++)
     {
+
+
         double x = tasks[i].start * bar_width;
         double y = i * bar_height;
         double task_width = (tasks[i].finish - tasks[i].start) * bar_width;

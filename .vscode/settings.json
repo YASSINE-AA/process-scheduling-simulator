@@ -7,6 +7,10 @@
         "cjson.h": "c",
         "stdbool.h": "c",
         "SRT.C": "cpp",
-        "cerrno": "c"
+        "cerrno": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }

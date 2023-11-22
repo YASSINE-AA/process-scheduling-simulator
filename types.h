@@ -42,3 +42,9 @@ typedef struct
     const char* label;
     int color[4];
 } ExecutedTask;
+
+typedef struct priority_queue {
+    process* array;
+    int size;
+    int capacity;
+} priority_queue;

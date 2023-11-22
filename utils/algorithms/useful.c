@@ -90,57 +90,25 @@ process* next_available(process* available_processes, int number_available_proce
     return NULL;
 }
 
-// Function to find the next available process based on priority
-process* next_available_p(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
-    if (available_processes != NULL) {
-        process* earliest = NULL;
 
-        for (int i = 0; i < number_available_processes; i++) {
-            if (!is_in_old_list(available_processes[i], in_queue, proc_in_queue)) {
-                if (earliest == NULL || available_processes[i].priority < earliest->priority) {
-                    earliest = &available_processes[i];
-                }
-            }
-        }
-
-        return earliest;
-    }
-
-    return NULL;
-}
-
-// Function to find the next available process based on execution time (SRT)
-process* next_available_srt(process* available_processes, int number_available_processes, process* in_queue, int proc_in_queue) {
-    if (available_processes != NULL) {
-        process* earliest = NULL;
-
-        for (int i = 0; i < number_available_processes; i++) {
-            if (!is_in_old_list(available_processes[i], in_queue, proc_in_queue)) {
-                if (earliest == NULL || available_processes[i].execution_time <= earliest->execution_time) {
-                    earliest = &available_processes[i];
-                }
-            }
-        }
-
-        return earliest;
-    }
-
-    return NULL;
-}
-
-// Function to remove an element from an array
-void remove_element(process* arr, int* size, process element) {
-    int i, j;
-    for (i = 0; i < *size; i++) {
-        if (strcmp(arr[i].name, element.name) == 0) {
-            for (j = i; j < *size - 1; j++) {
-                arr[j] = arr[j + 1];
+void remove_element(process *array, int *size, process elementToRemove) {
+    int found = 0;
+    for (int i = 0; i < *size; ++i) {
+        if (array[i].name == elementToRemove.name) {
+            found = 1;
+            for (int j = i; j < *size - 1; ++j) {
+                array[j] = array[j + 1];
             }
             (*size)--;
             break;
         }
     }
+
+    if (!found) {
+        printf("Element not found in the array.\n");
+    }
 }
+
 
 // Function to get the earliest arrival time in a process array
 int get_earliest_time(process* process_array, int process_array_size) {

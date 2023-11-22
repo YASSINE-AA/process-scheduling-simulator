@@ -1,6 +1,6 @@
 ExecutedTask* get_priority_output(process *process_array, int process_array_size, bool is_preemptive, int* tasks_size)
 {   
-     *tasks_size = 0;
+    /*  *tasks_size = 0;
     ExecutedTask* tasks = (ExecutedTask*) malloc(sizeof(ExecutedTask)*100);
 
     proc_queue *queue = (proc_queue *)malloc(sizeof(proc_queue));
@@ -73,19 +73,16 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
                         in_queue[in_queue_size] = to_be_executed;
                         in_queue_size++;
                         to_be_executed.execution_time = next_proc_in_q->arrived_at - current_time;
-                        sort_queue_priority(queue); // sort the queue
                     } else {
                         add_to_queue(queue, *next_proc_in_q);
                         in_queue[in_queue_size] = *next_proc_in_q;
                         in_queue_size++;
-                        sort_queue_priority(queue); // sort the queue
                     }
                     
                   }  else {
                     add_to_queue(queue, *next_proc_in_q);
                     in_queue[in_queue_size] = *next_proc_in_q;
                     in_queue_size++;
-                    sort_queue_priority(queue);
 
 
                   }
@@ -126,6 +123,7 @@ while (!is_execution_done(executed_processes, num_executed_processes, process_ar
     if (new_arrival != NULL)
         free(new_arrival);
     if (queue != NULL)
-        free(queue);
-    return tasks;
+        free(queue);*/
+   
+    return NULL;
 }
