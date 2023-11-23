@@ -1,188 +1,102 @@
-ExecutedTask *get_round_robin_output(int quantum, process *process_array, int number_of_process, int *tasks_size)
-{
-    
-    int counter = get_earliest_time(process_array, number_of_process);
-    *tasks_size = 0;
-    ExecutedTask *tasks = NULL;
-    int tasks_capacity = 100;
 
-    if ((tasks = (ExecutedTask *)malloc(sizeof(ExecutedTask) * tasks_capacity)) == NULL)
+
+ExecutedTask *get_round_robin_output(int quantum, process *process_array, int process_array_size, int *tasks_size)
+{
+    *tasks_size = 0;
+    int current_time = get_earliest_time(process_array, process_array_size);
+    int executed_size = 0;
+    int temp_q = 0;
+    int in_queue_size = 0;
+    int min_index = 0;
+
+    process *executed = (process *)malloc(sizeof(process) * process_array_size);
+    if (executed == NULL)
     {
-        // Handle memory allocation failure
+        printf("Allocation failed!");
+        return NULL;
+    }
+
+    process *in_queue = (process *)malloc(sizeof(process) * process_array_size);
+    if (in_queue == NULL)
+    {
+        printf("Allocation failed!");
         return NULL;
     }
 
     proc_queue *queue = (proc_queue *)malloc(sizeof(proc_queue));
     if (queue == NULL)
     {
-        // Handle memory allocation failure
-        free(tasks);
+        printf("Allocation failed!");
         return NULL;
     }
 
-    // Initialize the queue
-    create_queue(queue);
-
-    process *executed_processes = (process *)malloc(sizeof(process) * 100);
-    process in_queue[number_of_process];
-
-    int num_executed_processes = 0;
-    int new_arrivals_size = 0;
-    int in_queue_size = 0;
-
-    process *new_arrivals = get_new_arrival(counter, NULL, new_arrivals_size, process_array, number_of_process, &new_arrivals_size);
-    process *next_available_proc = next_available(new_arrivals, new_arrivals_size, NULL, 0);
-    while (!is_execution_done(executed_processes, num_executed_processes, process_array, number_of_process))
+    ExecutedTask *tasks = (ExecutedTask *)malloc(sizeof(ExecutedTask) * 100);
+    if (tasks == NULL)
     {
-        if (new_arrivals != NULL && next_available_proc != NULL)
+        printf("Allocation failed!");
+        return NULL;
+    }
+    sort_process_array_by_at(process_array, process_array_size);
+    while (!is_execution_done(executed, executed_size, process_array, process_array_size))
+    {
+
+        for (int i = 0; i < process_array_size; i++)
         {
-            // Add to queue
-            while (next_available_proc != NULL)
+            if (process_array[i].arrived_at <= current_time && !is_in_old_list(process_array[i], in_queue, in_queue_size))
             {
-                add_to_queue(queue, *next_available_proc);
-                in_queue[in_queue_size] = *next_available_proc;
+                in_queue[in_queue_size] = process_array[i];
                 in_queue_size++;
-                next_available_proc = next_available(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
+                add_to_queue(queue, process_array[i]);
             }
+        }
+        if (!is_queue_empty(queue))
+        {
+            process execute = remove_from_queue(queue);
 
-            // Execute queue
-            while (!is_queue_empty(queue))
+            if (execute.execution_time >= quantum)
             {
-                process executed = remove_from_queue(queue);
+                execute.execution_time -= quantum;
+                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + quantum, execute.name));
 
-                int old_counter = counter;
-                executed_processes[num_executed_processes] = executed;
-                num_executed_processes++;
-
-                if (executed.execution_time > 0)
+                if (execute.execution_time == 0 && !is_in_old_list(execute, executed, executed_size))
                 {
-                    if (executed.execution_time <= quantum)
-                    {
-                        counter += executed.execution_time;
-                        executed.execution_time = 0;
-
-                        ExecutedTask task;
-                        task.arrival_time = executed.arrived_at;
-                        task.start = old_counter;
-                        task.finish = counter;
-                        task.label = strdup(executed.name);
-
-                        if (task.label == NULL)
-                        {
-                            free(tasks);
-                            free(queue);
-                            return NULL;
-                        }
-
-                        if (*tasks_size < tasks_capacity)
-                        {
-                            tasks[*tasks_size] = task;
-                            (*tasks_size)++;
-                        }
-                        else
-                        {
-                            tasks_capacity *= 2;
-                            tasks = realloc(tasks, sizeof(ExecutedTask) * tasks_capacity);
-
-                            if (tasks == NULL)
-                            {
-                                free(queue);
-                                return NULL;
-                            }
-
-                            tasks[*tasks_size] = task;
-                            (*tasks_size)++;
-                        }
-                    }
-                    else
-                    {
-                        counter += quantum;
-                        executed.execution_time -= quantum;
-
-                        ExecutedTask task;
-                        task.arrival_time = executed.arrived_at;
-                        
-                        task.start = old_counter;
-                        task.finish = counter;
-                        task.label = strdup(executed.name);
-
-                        if (task.label == NULL)
-                        {
-                            // Handle strdup failure
-                            free(tasks);
-                            free(queue);
-                            return NULL;
-                        }
-
-                        if (*tasks_size < tasks_capacity)
-                        {
-                            tasks[*tasks_size] = task;
-                            (*tasks_size)++;
-                        }
-                        else
-                        {
-                            tasks_capacity *= 2;
-                            tasks = realloc(tasks, sizeof(ExecutedTask) * tasks_capacity);
-
-                            if (tasks == NULL)
-                            {
-                                free(queue);
-                                return NULL;
-                            }
-
-                            tasks[*tasks_size] = task;
-                            (*tasks_size)++;
-                        }
-
-                        new_arrivals = get_new_arrival(counter, executed_processes, num_executed_processes, process_array, number_of_process, &new_arrivals_size);
-                        next_available_proc = next_available(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
-
-                        if (next_available_proc != NULL)
-                        {
-                            while (next_available_proc != NULL)
-                            {
-                                add_to_queue(queue, *next_available_proc);
-                                in_queue[in_queue_size] = *next_available_proc;
-                                in_queue_size++;
-
-                                next_available_proc = next_available(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
-                            }
-                        }
-
-                        add_to_queue(queue, executed);
-                    }
+                    executed[executed_size] = execute;
+                    executed_size++;
+                    current_time += quantum;
                 }
+                else
+                {
+                    current_time += quantum;
+
+                    for (int i = 0; i < process_array_size; i++)
+                    {
+                        if (process_array[i].arrived_at <= current_time && !is_in_old_list(process_array[i], in_queue, in_queue_size))
+                        {
+                            in_queue[in_queue_size] = process_array[i];
+                            in_queue_size++;
+                            add_to_queue(queue, process_array[i]);
+                        }
+                    }
+                    add_to_queue(queue, execute);
+                }
+            }
+            else
+            {
+                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + execute.execution_time, execute.name));
+                executed[executed_size] = execute;
+                executed_size++;
+                current_time += execute.execution_time;
             }
         }
         else
         {
-            counter++;
-            printf("counter: %d\n", counter);
-        }
-
-        new_arrivals = get_new_arrival(counter, executed_processes, num_executed_processes, process_array, number_of_process, &new_arrivals_size);
-        next_available_proc = next_available(new_arrivals, new_arrivals_size, in_queue, in_queue_size);
-    }
-
-    if (executed_processes != NULL)
-    {
-        if (num_executed_processes < number_of_process)
-        {
-            process *resized_ep = (process *)realloc(executed_processes, num_executed_processes);
-            if (resized_ep != NULL)
-            {
-                free(resized_ep);
-                resized_ep = NULL;
-            }
-            else
-                return NULL;
+            current_time++;
         }
     }
-    // Free allocated memory
-    if (queue != NULL)
-    {
-        free(queue);
-    }
 
-    return tasks;
+    tasks = format_executed_tasks(tasks, tasks_size, process_array, process_array_size);
+
+    if (tasks != NULL)
+        return tasks;
+    return NULL;
 }

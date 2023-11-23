@@ -17,14 +17,14 @@ ExecutedTask *get_fifo_output(process *process_array, int process_array_size, in
 
     process *executed = (process *)malloc(sizeof(process) * process_array_size);
     
-    // Populate queue
+    
     for (int i = 0; i < process_array_size; i++)
     {
-        add_to_queue(queue, process_array[i]);
+        add_to_queue_fifo(queue, process_array[i]);
     }
     while (!is_execution_done(executed, executed_size, process_array, process_array_size))
     {
-        // execute
+        
         if (!is_queue_empty(queue))
         {
             process execute = remove_from_queue(queue);

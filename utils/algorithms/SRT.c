@@ -24,7 +24,7 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                 add_to_pr_queue(queue, process_array[i]);
             }
         }
-        // execute
+        
         if (!is_pr_queue_empty(queue))
         {
             process execute = remove_from_pr_queue(queue);
