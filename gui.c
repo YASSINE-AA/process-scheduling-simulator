@@ -14,6 +14,7 @@
 
 // TYPES
 #include "./types.h"
+#include "./utils/algorithms/useful.c"
 #include "./utils/algorithms/queue_data_struct.c"
 
 // GUI
@@ -21,10 +22,10 @@
  
 
 // ALGORITHMS
-#include "./utils/algorithms/useful.c"
 #include "./utils/algorithms/round_robin.c"
 #include "./utils/algorithms/FIFO.c"
 #include "./utils/algorithms/priority.c"
+#include "./utils/algorithms/priority_np.c"
 #include "./utils/algorithms/multilevel.c"
 #include "./utils/algorithms/SRT.c"
 
@@ -179,14 +180,14 @@ void load_algorithm(Algorithm fnc)
         break;
 
     case PRIORITY_P:
-        task = get_priority_output(proc_head, config_file_size, true, &executed_tasks_size);
+        task = get_priority_output(proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = PRIORITY_P;
         window_name_suffix = " (PRIORITY PREEMPTIVE)";
 
         break;
 
     case PRIORITY:
-        task = get_priority_output(proc_head, config_file_size, false, &executed_tasks_size);
+        task = get_priority_np_output(proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = PRIORITY;
         window_name_suffix = " (PRIORITY NON-PREEMPTIVE)";
 

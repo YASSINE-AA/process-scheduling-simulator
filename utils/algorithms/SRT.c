@@ -1,5 +1,3 @@
-
-
 ExecutedTask *get_srt_output(process *process_array, int process_array_size, int *executed_tasks_size)
 {
 

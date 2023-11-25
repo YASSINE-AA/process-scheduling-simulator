@@ -1,32 +1,24 @@
-
-// Process Type
 typedef struct process
 {
     int arrived_at;
     int execution_time;
     int priority;
     char name[100];
+    bool execute_full;
 } process;
 
-
-// Options Type
 typedef struct options
 {
     int quantum;
     int algorithm;
 } options;
 
-// ================ FIFO ======================
-
-// Queue Element (process in queue)
 typedef struct proc_in_queue
 {
     process value;
     struct proc_in_queue* next;
 } proc_in_queue;
 
-
-// Queue Type
 typedef struct proc_queue
 {
     struct proc_in_queue* tail;
@@ -48,3 +40,8 @@ typedef struct priority_queue {
     int size;
     int capacity;
 } priority_queue;
+
+typedef struct {
+    char* name;
+    int finish;
+} finish_track;

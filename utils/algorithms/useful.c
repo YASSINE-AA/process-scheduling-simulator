@@ -1,7 +1,13 @@
-bool is_in_old_list(process p, process* old_process_list, int old_process_list_size) {
-    if (old_process_list != NULL) {
-        for (int j = 0; j < old_process_list_size; j++) {
-            if (strncmp(p.name, old_process_list[j].name, sizeof(p.name)) == 0) {
+
+
+bool is_in_old_list(process p, process *old_process_list, int old_process_list_size)
+{
+    if (old_process_list != NULL)
+    {
+        for (int j = 0; j < old_process_list_size; j++)
+        {
+            if (strncmp(p.name, old_process_list[j].name, sizeof(p.name)) == 0)
+            {
                 return true;
             }
         }
@@ -10,13 +16,71 @@ bool is_in_old_list(process p, process* old_process_list, int old_process_list_s
     return false;
 }
 
+bool is_in_old_list_f(process p, finish_track *old_process_list, int old_process_list_size)
+{
+    if (old_process_list != NULL)
+    {
+        for (int j = 0; j < old_process_list_size; j++)
+        {
+            if (strncmp(p.name, old_process_list[j].name, sizeof(p.name)) == 0)
+            {
+                return true;
+            }
+        }
+    }
 
-void remove_element(process *array, int *size, process elementToRemove) {
+    return false;
+}
+
+int search_finish(finish_track *arr, int arr_size, process p)
+{
+    if (arr != NULL)
+    {
+        for (int i = 0; i < arr_size; i++)
+        {
+            if (strcmp(arr[i].name, p.name) == 0)
+                return arr[i].finish;
+        }
+    }
+    return -1;
+}
+finish_track* update_finish_tracker(finish_track *arr, int *arr_size, process p, int exec_units, int current_time)
+{
+    if (arr != NULL)
+    {
+        if (is_in_old_list_f(p, arr, *arr_size))
+        {
+            for (int i = 0; i < *arr_size; i++)
+            {
+                if (strcmp(arr[i].name, p.name) == 0)
+                    arr[i].finish = current_time + exec_units;
+            }
+            return arr;
+        }
+        else
+        {
+            finish_track t;
+            t.name = strdup(p.name);  
+            t.finish = current_time + exec_units;
+            arr[*arr_size] = t;
+            (*arr_size)++;
+            return arr;
+        }
+    }
+    return NULL;
+}
+
+
+void remove_element(process *array, int *size, process elementToRemove)
+{
     int found = 0;
-    for (int i = 0; i < *size; ++i) {
-        if (array[i].name == elementToRemove.name) {
+    for (int i = 0; i < *size; ++i)
+    {
+        if (array[i].name == elementToRemove.name)
+        {
             found = 1;
-            for (int j = i; j < *size - 1; ++j) {
+            for (int j = i; j < *size - 1; ++j)
+            {
                 array[j] = array[j + 1];
             }
             (*size)--;
@@ -24,74 +88,96 @@ void remove_element(process *array, int *size, process elementToRemove) {
         }
     }
 
-    if (!found) {
+    if (!found)
+    {
         printf("Element not found in the array.\n");
     }
 }
 
-
-int get_earliest_time(process* process_array, int process_array_size) {
-    if (process_array_size == 0) return process_array[0].arrived_at;
+int get_earliest_time(process *process_array, int process_array_size)
+{
+    if (process_array_size == 0)
+        return process_array[0].arrived_at;
     int min_value = get_earliest_time(process_array, process_array_size - 1);
-    if (min_value > process_array[process_array_size - 1].arrived_at) {
+    if (min_value > process_array[process_array_size - 1].arrived_at)
+    {
         return process_array[process_array_size - 1].arrived_at;
-    } else {
+    }
+    else
+    {
         return min_value;
     }
 }
 
-int get_latest_time(process* process_array, int process_array_size) {
+int get_latest_time(process *process_array, int process_array_size)
+{
     int latest = process_array[0].arrived_at;
-    for (int i = 0; i < process_array_size; i++) {
-        if (latest < process_array[i].arrived_at) {
+    for (int i = 0; i < process_array_size; i++)
+    {
+        if (latest < process_array[i].arrived_at)
+        {
             latest = process_array[i].arrived_at;
         }
     }
     return latest;
 }
 
-int get_total_execution_time(process* process_array, int process_array_size) {
+int get_total_execution_time(process *process_array, int process_array_size)
+{
     int sum = 0;
 
-    for (int i = 0; i < process_array_size; i++) {
+    for (int i = 0; i < process_array_size; i++)
+    {
         sum += process_array[i].execution_time;
     }
 
     return sum;
 }
 
-int get_last_timestamp(process* process_array, int process_array_size) {
+int get_last_timestamp(process *process_array, int process_array_size)
+{
     int latest_time = get_latest_time(process_array, process_array_size);
     int earliest_time = get_earliest_time(process_array, process_array_size);
     int total_exec_time = get_total_execution_time(process_array, process_array_size) - process_array[process_array_size - 1].execution_time + earliest_time;
 
-    if (total_exec_time >= latest_time) {
+    if (total_exec_time >= latest_time)
+    {
         return total_exec_time + earliest_time + process_array[process_array_size - 1].execution_time;
-    } else {
+    }
+    else
+    {
         return latest_time + process_array[process_array_size - 1].execution_time;
     }
 }
 
-bool is_execution_done(process* executed, int executed_size, process* process_array, int process_array_size) {
+bool is_execution_done(process *executed, int executed_size, process *process_array, int process_array_size)
+{
     bool equal = true;
 
-    if (executed != NULL && process_array != NULL) {
-        for (int i = 0; i < process_array_size; i++) {
+    if (executed != NULL && process_array != NULL)
+    {
+        for (int i = 0; i < process_array_size; i++)
+        {
             bool process_executed = false;
 
-            for (int j = 0; j < executed_size; j++) {
-                if (strncmp(process_array[i].name, executed[j].name, sizeof(process_array[i].name)) == 0) {
+            for (int j = 0; j < executed_size; j++)
+            {
+                if (strncmp(process_array[i].name, executed[j].name, sizeof(process_array[i].name)) == 0)
+                {
                     process_executed = true;
                     break;
                 }
             }
 
-            if (!process_executed) {
+            if (!process_executed)
+            {
                 equal = false;
                 break;
             }
         }
-    } else {
+    }
+    else
+    {
         equal = false;
     }
 
@@ -106,7 +192,7 @@ void sort_process_array_by_at(process *process_array, int process_array_size)
         {
             if (process_array[j].arrived_at > process_array[j + 1].arrived_at)
             {
-                
+
                 process temp = process_array[j];
                 process_array[j] = process_array[j + 1];
                 process_array[j + 1] = temp;
@@ -114,6 +200,7 @@ void sort_process_array_by_at(process *process_array, int process_array_size)
         }
     }
 }
-void free_process_array(process* arr) {
+void free_process_array(process *arr)
+{
     free(arr);
 }
