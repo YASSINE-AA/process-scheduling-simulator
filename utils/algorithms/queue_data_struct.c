@@ -194,6 +194,7 @@ void add_to_pr_queue(priority_queue *pq, process new_process)
 }
 bool compare_process_finish_arrival(int prev_finish, int finish, process a, process b, int current_time)
 {
+    printf("%d: %s prev: %d, %s finish: %d\n", current_time, a.name, prev_finish, b.name, finish);
     if (prev_finish != -1 && finish != -1)
     {
         return finish < prev_finish;
@@ -204,11 +205,11 @@ bool compare_process_finish_arrival(int prev_finish, int finish, process a, proc
     }
     else if (prev_finish == -1 && finish != -1)
     {
-        return a.arrived_at < finish;
+        return a.arrived_at > finish;
     }
     else
     {
-        return false;
+        return a.arrived_at > b.arrived_at;
     }
 }
 void add_to_pr_queue_p(priority_queue *pq, process new_process, finish_track *track_arr, int track_arr_size, int current_time)
@@ -230,13 +231,9 @@ void add_to_pr_queue_p(priority_queue *pq, process new_process, finish_track *tr
         while (i > 0 &&
                (pq->array[(i - 1) / 2].priority > pq->array[i].priority ||
                 (pq->array[(i - 1) / 2].priority == pq->array[i].priority &&
-                 compare_process_finish_arrival(prev_finish, finish, pq->array[(i - 1) / 2], pq->array[i], current_time))))
+                 !compare_process_finish_arrival(prev_finish, finish, pq->array[(i - 1) / 2], pq->array[i], current_time))))
         {
-            if (pq->array[(i - 1) / 2].priority == pq->array[i].priority &&
-                compare_process_finish_arrival(prev_finish, finish, pq->array[(i - 1) / 2], pq->array[i], current_time))
-            {
-                pq->array[i].execute_full = true;
-            }
+            if(pq->array[(i - 1) / 2].priority == pq->array[i].priority) printf("%d %s %s", current_time, pq->array[(i - 1) / 2].name, pq->array[i].name);
             swap(&pq->array[i], &pq->array[(i - 1) / 2]);
             i = (i - 1) / 2;
             prev_finish = search_finish(track_arr, track_arr_size, pq->array[(i - 1) / 2]);
@@ -260,7 +257,7 @@ process remove_from_pr_queue(priority_queue *pq)
 {
     if (pq->size <= 0)
     {
-        process empty_process = {0, 0, 0, "", false};
+        process empty_process = {0, 0, 0, ""};
         return empty_process;
     }
 
@@ -290,7 +287,7 @@ process remove_from_pr_queue_p(priority_queue *pq)
 {
     if (pq->size <= 0)
     {
-        process empty_process = {0, 0, 0, "", false};
+        process empty_process = {0, 0, 0, ""};
         return empty_process;
     }
 

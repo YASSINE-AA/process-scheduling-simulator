@@ -4,54 +4,49 @@
 		"algorithm":	10
 	},
 	"process":	[{
-			"arrived_at":	39,
-			"execution_time":	6,
-			"priority":	9,
+			"arrived_at":	43,
+			"execution_time":	3,
+			"priority":	10,
 			"name":	"p1"
 		}, {
-			"arrived_at":	2,
+			"arrived_at":	12,
 			"execution_time":	8,
-			"priority":	3,
+			"priority":	2,
 			"name":	"p2"
 		}, {
-			"arrived_at":	40,
-			"execution_time":	9,
-			"priority":	6,
+			"arrived_at":	5,
+			"execution_time":	6,
+			"priority":	3,
 			"name":	"p3"
 		}, {
-			"arrived_at":	8,
-			"execution_time":	8,
-			"priority":	10,
+			"arrived_at":	26,
+			"execution_time":	4,
+			"priority":	6,
 			"name":	"p4"
 		}, {
-			"arrived_at":	44,
-			"execution_time":	10,
-			"priority":	8,
+			"arrived_at":	34,
+			"execution_time":	6,
+			"priority":	4,
 			"name":	"p5"
 		}, {
-			"arrived_at":	20,
-			"execution_time":	3,
+			"arrived_at":	33,
+			"execution_time":	2,
 			"priority":	6,
 			"name":	"p6"
 		}, {
-			"arrived_at":	27,
+			"arrived_at":	5,
 			"execution_time":	8,
-			"priority":	2,
+			"priority":	4,
 			"name":	"p7"
 		}, {
-			"arrived_at":	24,
+			"arrived_at":	27,
 			"execution_time":	5,
-			"priority":	9,
+			"priority":	8,
 			"name":	"p8"
 		}, {
-			"arrived_at":	31,
-			"execution_time":	3,
-			"priority":	4,
+			"arrived_at":	43,
+			"execution_time":	2,
+			"priority":	5,
 			"name":	"p9"
-		}, {
-			"arrived_at":	36,
-			"execution_time":	1,
-			"priority":	8,
-			"name":	"p10"
 		}]
 }
