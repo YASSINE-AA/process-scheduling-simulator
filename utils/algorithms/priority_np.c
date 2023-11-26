@@ -41,7 +41,7 @@ ExecutedTask *get_priority_np_output(process *process_array, int process_array_s
             {
                 in_queue[in_queue_size] = process_array[i];
                 in_queue_size++;
-                add_to_pr_queue_p(queue, process_array[i], NULL, 0, 0);
+                add_to_pr_queue_p(queue, process_array[i]);
             }
         }
         if (!is_pr_queue_empty(queue))

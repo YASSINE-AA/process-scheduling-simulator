@@ -18,52 +18,75 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
         return NULL;
 
     int executed_size = 0;
-    int arrival_offset_size = 0;
-    process *arrival_offset = (process *)malloc(sizeof(process) * process_array_size);
-    if (arrival_offset == NULL)
-        return NULL;
 
     process *executed = (process *)malloc(sizeof(process) * process_array_size);
     if (executed == NULL)
         return NULL;
-    bool finish_cond = false;
-    process on_hold = (process) {0, 0, -1, ""};
+    process execute;
+    int execution_limit = -1;
+    sort_process_array_by_at(process_array, process_array_size);
     while (!is_execution_done(executed, executed_size, process_array, process_array_size))
     {
 
         for (int i = 0; i < process_array_size; i++)
         {
-            if (process_array[i].arrived_at == current_time && !is_in_old_list(process_array[i], arrival_offset, arrival_offset_size))
+            if (process_array[i].arrived_at == current_time)
             {
-                add_to_pr_queue_p(queue, process_array[i], finish_track_arr, finish_track_arr_size, current_time);
+                add_to_pr_queue_p(queue, process_array[i]);
+                print_queue(queue);
             }
         }
 
         if (!is_pr_queue_empty(queue))
         {
-            process execute = remove_from_pr_queue_p(queue);
-        
-            execute.execution_time--;
 
-            if (execute.execution_time > 0)
+            if (execution_limit == -1)
+                execute = remove_from_pr_queue_p(queue);
+            
+            printf("%d", get_next_proc(queue, execute).priority != -1 && get_next_proc(queue, execute).priority == execute.priority);
+            
+            if (get_next_proc(queue, execute).priority != -1 && get_next_proc(queue, execute).priority == execute.priority)
             {
-                add_to_pr_queue_p(queue, execute, finish_track_arr, finish_track_arr_size, current_time);
+                execution_limit = get_at_process_with_higher_pr(queue, execute);
+                if (execution_limit != -1)
+                {
+                    execute.execution_time -= execution_limit - current_time;
+                    if (execute.execution_time <= 0)
+                    {
+                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, execution_limit, execute.name));
+                        current_time = execution_limit;
+                        if (!is_in_old_list(execute, executed, executed_size))
+                        {
+                            executed[executed_size] = execute;
+                            executed_size++;
+                        }
+                    }
+                    else
+                    {
+                        add_to_pr_queue_p(queue, execute);
+                        current_time += execute.execution_time;
+                    }
+                }
+                execution_limit = -1;
             }
             else
             {
-                if (!is_in_old_list(execute, executed, executed_size))
+                if (execute.execution_time > 0)
                 {
-                    executed[executed_size] = execute;
-                    executed_size++;
+                    add_to_pr_queue_p(queue, execute);
                 }
+                else
+                {
+                    if (!is_in_old_list(execute, executed, executed_size))
+                    {
+                        executed[executed_size] = execute;
+                        executed_size++;
+                    }
+                }
+
+                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                current_time++;
             }
-
-            // add to finish tracker
-            finish_track_arr = update_finish_tracker(finish_track_arr, &finish_track_arr_size, execute, 1, current_time);
-
-            add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
-            current_time++;
-        
         }
         else
         {
