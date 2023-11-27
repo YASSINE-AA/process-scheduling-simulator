@@ -71,6 +71,7 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
                         executed_size++;
                     }
                     lock = false;
+                  //  if(!removed) remove_from_pr_queue_p(queue);
                 }
             }
 
