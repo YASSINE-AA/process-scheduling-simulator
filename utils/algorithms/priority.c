@@ -16,14 +16,15 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
     ExecutedTask *executed_tasks = (ExecutedTask *)malloc(sizeof(ExecutedTask) * 100);
     if (executed_tasks == NULL)
         return NULL;
-
+    bool lock = false;
+    bool added = false;
     int executed_size = 0;
+    bool removed = false;
 
+    process execute = (process){-1, -1, -1, ""};
     process *executed = (process *)malloc(sizeof(process) * process_array_size);
     if (executed == NULL)
         return NULL;
-    process execute;
-    int execution_limit = -1;
     sort_process_array_by_at(process_array, process_array_size);
     while (!is_execution_done(executed, executed_size, process_array, process_array_size))
     {
@@ -33,47 +34,34 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
             if (process_array[i].arrived_at == current_time)
             {
                 add_to_pr_queue_p(queue, process_array[i]);
-                print_queue(queue);
+                print_queue(queue, current_time);
             }
         }
 
         if (!is_pr_queue_empty(queue))
         {
 
-            if (execution_limit == -1)
+            if (get_front(queue).priority != -1 && get_front(queue).priority < execute.priority && !is_pr_queue_empty(queue))
+                lock = false;
+
+            if (!lock)
+            {
                 execute = remove_from_pr_queue_p(queue);
-            
-            printf("%d", get_next_proc(queue, execute).priority != -1 && get_next_proc(queue, execute).priority == execute.priority);
-            
-            if (get_next_proc(queue, execute).priority != -1 && get_next_proc(queue, execute).priority == execute.priority)
-            {
-                execution_limit = get_at_process_with_higher_pr(queue, execute);
-                if (execution_limit != -1)
-                {
-                    execute.execution_time -= execution_limit - current_time;
-                    if (execute.execution_time <= 0)
-                    {
-                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, execution_limit, execute.name));
-                        current_time = execution_limit;
-                        if (!is_in_old_list(execute, executed, executed_size))
-                        {
-                            executed[executed_size] = execute;
-                            executed_size++;
-                        }
-                    }
-                    else
-                    {
-                        add_to_pr_queue_p(queue, execute);
-                        current_time += execute.execution_time;
-                    }
-                }
-                execution_limit = -1;
+                removed = true;
             }
-            else
+
+            execute.execution_time -= 1;
+            if (get_front(queue).priority != -1 && get_front(queue).priority == execute.priority)
             {
+                printf("%s %d", execute.name, execute.execution_time);
+                lock = true;
                 if (execute.execution_time > 0)
                 {
-                    add_to_pr_queue_p(queue, execute);
+                    if (removed)
+                    {
+                        add_to_pr_queue_p(queue, execute);
+                        removed = false;
+                    }
                 }
                 else
                 {
@@ -82,14 +70,31 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
                         executed[executed_size] = execute;
                         executed_size++;
                     }
+                    lock = false;
                 }
-
-                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
-                current_time++;
             }
+
+            if (execute.execution_time > 0 && !lock)
+            {
+                add_to_pr_queue_p(queue, execute);
+            }
+            else
+            {
+
+                if (!is_in_old_list(execute, executed, executed_size))
+                {
+                    executed[executed_size] = execute;
+                    executed_size++;
+                }
+            }
+
+            add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+
+            current_time++;
         }
         else
         {
+            lock = false;
             current_time++;
         }
     }

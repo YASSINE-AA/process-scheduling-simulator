@@ -1,3 +1,6 @@
+
+#include <string.h>
+
 bool is_queue_empty(proc_queue *q)
 {
     return q->head == NULL;
@@ -103,9 +106,10 @@ priority_queue *init_priority_queue()
     return pq;
 }
 
-void print_queue(priority_queue *pq)
+void print_queue(priority_queue *pq, int current_time)
 {
     Node *current = pq->front;
+    printf("\n===========%d============\n", current_time);  
     while (current != NULL)
     {
         printf("%s\n", current->process.name);
@@ -113,49 +117,17 @@ void print_queue(priority_queue *pq)
     }
     printf("\n========================\n");
 }
-#include <string.h>
 
-process get_next_proc(priority_queue *pq, process reference)
+process get_front(priority_queue *pq)
 {
-    process invalid_process = (process){-1, -1, -1, ""};
-    Node *current = pq->front;
-
-    while (current != NULL)
+    process invalid_process = {-1, -1, -1, ""};
+    if (pq->front != NULL)
     {
-        if (strcmp(current->process.name, reference.name) == 0)
-        {
-            if (current->next != NULL)
-                return current->next->process;
-            else
-                return invalid_process;
-        }
-        current = current->next;
+        return pq->front->process;
     }
-
     return invalid_process;
 }
 
-
-int get_at_process_with_higher_pr(priority_queue *pq, process reference)
-{
-    bool found = false;
-    Node *current = pq->front;
-
-    int result = -1;
-
-    while (current != NULL)
-    {
-        if (current->process.priority > reference.priority)
-        {
-            found = true;
-            result = current->process.arrived_at;
-            break;
-        }
-        current = current->next;
-    }
-
-    return result;
-}
 void add_to_pr_queue(priority_queue *pq, process new_process)
 {
     Node *new_node = (Node *)malloc(sizeof(Node));
