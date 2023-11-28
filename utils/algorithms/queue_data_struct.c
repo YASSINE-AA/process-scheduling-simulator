@@ -131,6 +131,23 @@ void swap_exec_time(priority_queue *pq, process p)
     }
 }
 
+
+bool is_queue_longer_than_two(priority_queue* pq) {
+    bool val = false;
+    int count = 0;
+    if(pq->front != NULL) {
+         Node* current = pq->front;
+         while(current->next != NULL) {
+            count++;
+            current = current->next;
+         }
+         if(count > 2) return true;
+    }
+
+    return false;
+   
+}
+
 process get_front(priority_queue *pq)
 {
     process invalid_process = {-1, -1, -1, ""};

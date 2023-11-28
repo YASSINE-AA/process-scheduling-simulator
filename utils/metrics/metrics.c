@@ -1,11 +1,11 @@
 
 
-int get_rotation_time(const char *process_name, ExecutedTask *executed, int executed_size) 
+int get_rotation_time(const char *process_name, ExecutedTask *executed, int executed_size)
 {
     int result = 0;
     int finish = 0;
     int arrival_time = 0;
-     for (int i = 0; i < executed_size; i++)
+    for (int i = 0; i < executed_size; i++)
     {
         if (strcmp(process_name, executed[i].label) == 0)
         {
@@ -16,11 +16,11 @@ int get_rotation_time(const char *process_name, ExecutedTask *executed, int exec
     return finish - arrival_time;
 }
 
-int get_waiting_time(const char *process_name, ExecutedTask *executed, int executed_size, process* process_array, int process_array_size)
+int get_waiting_time(const char *process_name, ExecutedTask *executed, int executed_size, process *process_array, int process_array_size)
 {
     int rotation_time = get_rotation_time(process_name, executed, executed_size);
     int burst_time = 0;
-     for (int i = 0; i < process_array_size; i++)
+    for (int i = 0; i < process_array_size; i++)
     {
         if (strcmp(process_name, process_array[i].name) == 0)
         {
@@ -30,5 +30,3 @@ int get_waiting_time(const char *process_name, ExecutedTask *executed, int execu
     }
     return rotation_time - burst_time;
 }
-
-

@@ -1,4 +1,5 @@
 // gcc gui.c -o gui `pkg-config --cflags --libs gtk+-3.0` -lcjson
+
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
@@ -12,16 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 
-// TYPES
 #include "./types.h"
 #include "./utils/algorithms/useful.c"
 #include "./utils/algorithms/queue_data_struct.c"
 
-// GUI
-#include "./utils/gui/format.c" // fomart data to display as gantt
- 
+#include "./utils/gui/format.c"
 
-// ALGORITHMS
 #include "./utils/algorithms/round_robin.c"
 #include "./utils/algorithms/FIFO.c"
 #include "./utils/algorithms/priority.c"
@@ -29,13 +26,10 @@
 #include "./utils/algorithms/multilevel.c"
 #include "./utils/algorithms/SRT.c"
 
-// Metrics
 #include "./utils/metrics/metrics.c"
 
-// File generation
 #include "./utils/generation/generation.c"
 
-// Config filename
 const char *filename = "generated_config.json";
 int config_file_size = 0;
 int executed_tasks_size = 0;
@@ -128,13 +122,12 @@ process *read_config_file(const char *filename)
     free(config);
     return process_array;
 }
-// Options
+
 enum
 {
     GEN_FILE
 };
 
-// Algorithm options
 typedef enum
 {
     FIFO,
@@ -145,7 +138,7 @@ typedef enum
     SRT
 } Algorithm;
 
-Algorithm current_algorithm = PRIORITY_P;
+Algorithm current_algorithm = FIFO;
 char *concat(const char *s1, const char *s2)
 {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
@@ -199,6 +192,10 @@ void load_algorithm(Algorithm fnc)
         window_name_suffix = " (RR)";
 
         break;
+    case MULTILEVEL:
+        task = get_multilevel_output(proc_head, config_file_size, &executed_tasks_size);
+        current_algorithm = MULTILEVEL;
+        window_name_suffix = " (MULTILEVEL)";
 
     default:
         break;
@@ -218,11 +215,12 @@ void load_algorithm(Algorithm fnc)
 
     gtk_widget_queue_draw(drawing_area);
 }
-GtkWidget* draw_metrics_table() {
-        GtkWidget *table = gtk_grid_new();
+GtkWidget *draw_metrics_table()
+{
+    GtkWidget *table = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(table), 10);
     gtk_grid_set_column_spacing(GTK_GRID(table), 40);
-    // Header labels
+
     GtkWidget *label1 = gtk_label_new("Process Name");
     gtk_widget_set_halign(label1, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(label1, GTK_ALIGN_FILL);
@@ -238,91 +236,99 @@ GtkWidget* draw_metrics_table() {
     gtk_widget_set_valign(label3, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), label3, 2, 0, 1, 1);
 
-    // Data labels (replace the placeholders accordingly)
-   
     int row = 1;
     int col = 1;
     int total_rotation_time = 0;
     int total_waiting_time = 0;
-    for(int i=0; i<config_file_size; i++) {
-        GtkWidget *label4 = gtk_label_new(proc_head[i].name); // Process name placeholder
+    printf("waiting time for p1: %d", get_waiting_time("p1", tasks, executed_tasks_size, proc_head, config_file_size));
+    for (int i = 0; i < config_file_size; i++)
+    {
+        GtkWidget *label4 = gtk_label_new(proc_head[i].name);
         gtk_widget_set_halign(label4, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(label4, GTK_ALIGN_FILL);
         gtk_grid_attach(GTK_GRID(table), label4, 0, row, 1, 1);
 
-        char waiting_string[20]; // Allocate memory for waiting_string
+        char waiting_string[20];
         int waiting_time = get_waiting_time(proc_head[i].name, tasks, executed_tasks_size, proc_head, config_file_size);
         total_waiting_time += waiting_time;
         sprintf(waiting_string, "%d", waiting_time);
-        GtkWidget *label5 = gtk_label_new(waiting_string); // Waiting time placeholder
+        GtkWidget *label5 = gtk_label_new(waiting_string);
         gtk_widget_set_halign(label5, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(label5, GTK_ALIGN_FILL);
         gtk_grid_attach(GTK_GRID(table), label5, 1, row, 1, 1);
 
-        char rotation_string[20]; // Allocate memory for rotation_string
+        char rotation_string[20];
         int rotation_time = get_rotation_time(proc_head[i].name, tasks, executed_tasks_size);
         total_rotation_time += rotation_time;
         sprintf(rotation_string, "%d", rotation_time);
-        GtkWidget *label6 = gtk_label_new(rotation_string); // Rotation time placeholder
+        GtkWidget *label6 = gtk_label_new(rotation_string);
         gtk_widget_set_halign(label6, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(label6, GTK_ALIGN_FILL);
         gtk_grid_attach(GTK_GRID(table), label6, 2, row, 1, 1);
 
-    row++;
+        row++;
     }
-        gtk_window_set_default_size(GTK_WINDOW(metrics_window), 300, 10 * row);
-        GtkWidget *total_label = gtk_label_new("Average: "); // Process name placeholder
-        gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
+    gtk_window_set_default_size(GTK_WINDOW(metrics_window), 300, 10 * row);
+    GtkWidget *total_label = gtk_label_new("Average: ");
+    gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
 
-        char total_waiting_string[20]; // Allocate memory for waiting_string
-        sprintf(total_waiting_string, "%.2f units", (float) total_waiting_time/(config_file_size));
-        GtkWidget *total_waiting_label = gtk_label_new(total_waiting_string); // Waiting time placeholder
-        gtk_widget_set_halign(total_waiting_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_waiting_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_waiting_label, 1, row, 1, 1);
+    char total_waiting_string[20];
+    sprintf(total_waiting_string, "%.2f units", (float)total_waiting_time / (config_file_size));
+    GtkWidget *total_waiting_label = gtk_label_new(total_waiting_string);
+    gtk_widget_set_halign(total_waiting_label, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(total_waiting_label, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), total_waiting_label, 1, row, 1, 1);
 
-        char total_rotation_string[20]; // Allocate memory for rotation_string
-        sprintf(total_rotation_string, "%.2f units", (float) total_rotation_time/(config_file_size));
-        GtkWidget *total_rotation_label = gtk_label_new(total_rotation_string); // Rotation time placeholder
-        gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
-        gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
-        return table;
+    char total_rotation_string[20];
+    sprintf(total_rotation_string, "%.2f units", (float)total_rotation_time / (config_file_size));
+    GtkWidget *total_rotation_label = gtk_label_new(total_rotation_string);
+    gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
+    gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
+    return table;
 }
 
-void show_metrics_window() {
+void show_metrics_window()
+{
     metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
-    gtk_window_set_resizable (GTK_WINDOW(metrics_window), FALSE);
+    gtk_window_set_resizable(GTK_WINDOW(metrics_window), FALSE);
     metrics_table = draw_metrics_table();
     gtk_container_add(GTK_CONTAINER(metrics_window), metrics_table);
     gtk_widget_show_all(metrics_window);
 }
 
-void close_metrics_window() {
+void close_metrics_window()
+{
     gtk_window_close(GTK_WINDOW(metrics_window));
 }
 
-void update_metrics_window() {
-    if (metrics_window == NULL || metrics_table == NULL) {
+void update_metrics_window()
+{
+    if (metrics_window == NULL || metrics_table == NULL)
+    {
         return;
     }
 
-    gtk_widget_set_visible(metrics_table, TRUE); 
+    gtk_widget_set_visible(metrics_table, TRUE);
     gtk_container_remove(GTK_CONTAINER(metrics_window), metrics_table);
-    if (metrics_table != NULL) {
+    if (metrics_table != NULL)
+    {
         gtk_widget_destroy(metrics_table);
     }
 
     metrics_table = draw_metrics_table();
 
-    if (metrics_table != NULL) {
+    if (metrics_table != NULL)
+    {
         gtk_container_add(GTK_CONTAINER(metrics_window), metrics_table);
-        gtk_widget_show_all(metrics_window);  
+        gtk_widget_show_all(metrics_window);
         gtk_widget_queue_draw(GTK_WIDGET(metrics_table));
-    } else {
+    }
+    else
+    {
         g_print("Error creating metrics table\n");
     }
 }
@@ -338,7 +344,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     gint height = gtk_widget_get_allocated_height(widget);
     double bar_height = height / (double)(executed_tasks_size + 1);
     double bar_width = width / (double)tasks[executed_tasks_size - 1].finish;
-    cairo_set_source_rgb(cr, 0, 0, 0); // Black color
+    cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_set_line_width(cr, 2.0);
     cairo_move_to(cr, 0, height - bar_height);
     cairo_line_to(cr, width, height - bar_height);
@@ -353,7 +359,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
         if (i < executed_tasks_size)
         {
-            cairo_set_source_rgb(cr, 0, 0, 0); // Black color
+            cairo_set_source_rgb(cr, 0, 0, 0);
             cairo_move_to(cr, 5, y + bar_height / 2);
             cairo_show_text(cr, tasks[i].label);
             char start_time_str[10];
@@ -367,10 +373,8 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         }
     }
 
-    // Draw tasks
     for (int i = 0; i < executed_tasks_size; i++)
     {
-
 
         double x = tasks[i].start * bar_width;
         double y = i * bar_height;
@@ -380,7 +384,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         cairo_rectangle(cr, x, y, task_width, bar_height);
         cairo_fill_preserve(cr);
 
-        cairo_set_source_rgb(cr, 0, 0, 0); // Black color
+        cairo_set_source_rgb(cr, 0, 0, 0);
         cairo_set_line_width(cr, 1.0);
         cairo_stroke(cr);
 
@@ -400,8 +404,6 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     return FALSE;
 }
-
-
 
 void show_message_box_()
 {
@@ -429,7 +431,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
         {
             show_message_box_();
             load_algorithm(current_algorithm);
-        
+
             gtk_widget_queue_draw(drawing_area);
         }
 
@@ -437,14 +439,12 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     }
 }
 
-// Create the menu
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
     GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_;
     menubar = gtk_menu_bar_new();
 
-    // ALGORITHMS MENU
     menu = gtk_menu_new();
     menuitem = gtk_menu_item_new_with_label("First Come First Serve (FIFO)");
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(FIFO));
@@ -461,11 +461,13 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     menuitem = gtk_menu_item_new_with_label("SRT");
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SRT));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    menuitem = gtk_menu_item_new_with_label("MULTILEVEL");
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(MULTILEVEL));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem = gtk_menu_item_new_with_label("Algorithm");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
 
-    // OPTIONS MENU
     options_menu = gtk_menu_new();
     generate_config = gtk_menu_item_new_with_label("Generate .json config file");
     g_signal_connect(generate_config, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(GEN_FILE));
@@ -478,7 +480,6 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     return menubar;
 }
 
-// Main function
 int main(int argc, char *argv[])
 {
     printf("test");
@@ -500,7 +501,6 @@ int main(int argc, char *argv[])
             return 0;
         }
 
-        // Lire fichier configuration
         proc_head = read_config_file(argv[1]);
     }
 
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
 
     srand(time(NULL));
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  
+
     load_algorithm(current_algorithm);
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -533,4 +533,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif // SCHEDULER_H
+#endif
