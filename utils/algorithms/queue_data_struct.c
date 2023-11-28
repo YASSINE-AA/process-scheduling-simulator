@@ -179,6 +179,24 @@ process remove_from_pr_queue(priority_queue *pq)
 
     return removed_process;
 }
+
+bool is_in_queue(priority_queue* pq, char* process_name) {
+    bool val = false;
+    if(pq->front != NULL) {
+          Node* current = pq->front;
+          while(current->next != NULL) {
+            if(strcmp(current->process.name, process_name) == 0) {
+                val = true;
+                break;
+            }
+            current = current->next;
+          }
+          return val;
+    }
+    return false;
+  
+}
+
 void add_to_pr_queue_p(priority_queue *pq, process new_process)
 {
     Node *new_node = (Node *)malloc(sizeof(Node));
