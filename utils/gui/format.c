@@ -1,9 +1,10 @@
-ExecutedTask get_task(int start, int finish, char *label)
+ExecutedTask get_task(int start, int finish, int arrival_time, char *label)
 {
     ExecutedTask task;
     task.label = strdup(label);
     task.start = start;
     task.finish = finish;
+    task.arrival_time = arrival_time;
     return task;
 }
 

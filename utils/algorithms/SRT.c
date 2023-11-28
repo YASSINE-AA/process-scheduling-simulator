@@ -33,7 +33,7 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                 {
 
                     execute.execution_time--;
-                    add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                    add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
                     current_time++;
                     if (execute.execution_time == 0)
                     {
@@ -74,7 +74,7 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                     }
                 }
 
-                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
                 current_time++;
             }
         }

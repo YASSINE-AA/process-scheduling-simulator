@@ -56,7 +56,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
             if (execute.execution_time >= quantum)
             {
                 execute.execution_time -= quantum;
-                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + quantum, execute.name));
+                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + quantum, execute.arrived_at, execute.name));
 
                 if (execute.execution_time == 0 && !is_in_old_list(execute, executed, executed_size))
                 {
@@ -82,7 +82,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
             }
             else
             {
-                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + execute.execution_time, execute.name));
+                add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + execute.execution_time, execute.arrived_at, execute.name));
                 executed[executed_size] = execute;
                 executed_size++;
                 current_time += execute.execution_time;

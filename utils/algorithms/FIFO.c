@@ -36,7 +36,7 @@ ExecutedTask *get_fifo_output(process *process_array, int process_array_size, in
 
             if (current_time < execute.arrived_at)
                 current_time = execute.arrived_at;
-            add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + execute.execution_time, execute.name));
+            add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + execute.execution_time, execute.arrived_at, execute.name));
             current_time += execute.execution_time;
         }
     }

@@ -47,7 +47,7 @@ ExecutedTask *get_multilevel_output(process *process_array, int process_array_si
 
                     if (execute.execution_time > 0)
                     {
-                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
                         current_time++;
 
                         for (int i = 0; i < process_array_size; i++)
@@ -72,7 +72,7 @@ ExecutedTask *get_multilevel_output(process *process_array, int process_array_si
                             executed[executed_size] = execute;
                             executed_size++;
                         }
-                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                        add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
 
                         monitor_quantum = 0;
                         current_time++;
@@ -97,7 +97,7 @@ ExecutedTask *get_multilevel_output(process *process_array, int process_array_si
                     }
                 }
 
-                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.name));
+                add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
                 current_time++;
             }
         }
