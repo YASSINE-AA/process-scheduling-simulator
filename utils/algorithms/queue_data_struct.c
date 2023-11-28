@@ -147,7 +147,7 @@ void add_to_pr_queue(priority_queue *pq, process new_process)
     new_node->process = new_process;
     new_node->next = NULL;
 
-    if (pq->front == NULL || pq->front->process.execution_time >= new_process.execution_time)
+    if (pq->front == NULL || pq->front->process.execution_time > new_process.execution_time)
     {
         new_node->next = pq->front;
         pq->front = new_node;
@@ -155,12 +155,27 @@ void add_to_pr_queue(priority_queue *pq, process new_process)
     else
     {
         Node *current = pq->front;
-        while (current->next != NULL && current->next->process.execution_time < new_process.execution_time)
+        Node *previous = NULL;
+
+        while (current != NULL && current->process.execution_time < new_process.execution_time)
         {
+            previous = current;
             current = current->next;
         }
-        new_node->next = current->next;
-        current->next = new_node;
+
+        if (current != NULL && current->process.execution_time == new_process.execution_time)
+        {
+            new_node->next = current->next;
+            current->next = new_node;
+        }
+        else
+        {
+            new_node->next = current;
+            if (previous != NULL)
+                previous->next = new_node;
+            else
+                pq->front = new_node;
+        }
     }
 }
 
