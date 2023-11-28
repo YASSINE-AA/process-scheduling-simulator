@@ -145,7 +145,7 @@ typedef enum
     SRT
 } Algorithm;
 
-Algorithm current_algorithm = PRIORITY_P;
+Algorithm current_algorithm = PRIORITY;
 char *concat(const char *s1, const char *s2)
 {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);

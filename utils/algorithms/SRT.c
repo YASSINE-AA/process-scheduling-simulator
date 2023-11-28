@@ -12,6 +12,7 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
     int executed_size = 0;
 
     process *executed = (process *)malloc(sizeof(process) * process_array_size);
+        sort_process_array_by_at(process_array, process_array_size);
     while (!is_execution_done(executed, executed_size, process_array, process_array_size))
     {
 
