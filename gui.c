@@ -14,22 +14,27 @@
 #include <string.h>
 
 #include "./types.h"
-#include "./utils/algorithms/useful.c"
-#include "./utils/algorithms/queue_data_struct.c"
+#include "./utils/scheduling/useful.c"
 
-#include "./utils/gui/format.c"
+#include "./utils/queues/fifo/queue.h"
+#include "./utils/queues/priority/priority_queue.h"
+#include "./utils/queues/fifo/queue.c"
+#include "./utils/queues/priority/priority_queue.c"
 
-#include "./utils/algorithms/SJF.c"
-#include "./utils/algorithms/round_robin.c"
-#include "./utils/algorithms/FIFO.c"
-#include "./utils/algorithms/priority.c"
-#include "./utils/algorithms/priority_np.c"
-#include "./utils/algorithms/multilevel.c"
-#include "./utils/algorithms/SRT.c"
+#include "./utils/gantt/format.c"
+
+#include "./utils/scheduling/SJF.c"
+#include "./utils/scheduling/round_robin.c"
+#include "./utils/scheduling/FIFO.c"
+#include "./utils/scheduling/priority.c"
+#include "./utils/scheduling/priority_np.c"
+#include "./utils/scheduling/multilevel.c"
+#include "./utils/scheduling/SRT.c"
 
 #include "./utils/metrics/metrics.c"
 
-#include "./utils/generation/generation.c"
+#include "./utils/config/write.c"
+#include "./utils/config/read.c"
 
 const char *filename = "generated_config.json";
 int config_file_size = 0;
@@ -39,91 +44,6 @@ process *proc_head;
 GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table;
 options ops;
 bool is_metrics_open = false;
-
-process *read_config_file(const char *filename)
-{
-    config_file_size = 0;
-    process *process_array = malloc(12 * sizeof(process));
-    if (process_array == NULL)
-    {
-        printf("Error: memory allocation failed\n");
-        return NULL;
-    }
-
-    FILE *fp = fopen(filename, "r");
-
-    if (fp == NULL)
-    {
-        printf("Error: could not open file %s\n", filename);
-        free(process_array);
-        return NULL;
-    }
-
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    char *config = (char *)malloc(file_size + 1);
-    if (config == NULL)
-    {
-        printf("Error: memory allocation failed\n");
-        fclose(fp);
-        free(process_array);
-        return NULL;
-    }
-
-    fread(config, 1, file_size, fp);
-    config[file_size] = '\0';
-
-    fclose(fp);
-
-    cJSON *config_json = cJSON_Parse(config);
-    if (config_json == NULL)
-    {
-        const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL)
-        {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
-        }
-        free(config);
-        free(process_array);
-        return NULL;
-    }
-
-    const cJSON *nested_process = NULL;
-    const cJSON *process_list = NULL;
-    int status = 0;
-
-    process_list = cJSON_GetObjectItemCaseSensitive(config_json, "process");
-    cJSON_ArrayForEach(nested_process, process_list)
-    {
-        cJSON *arrived_at = cJSON_GetObjectItemCaseSensitive(nested_process, "arrived_at");
-        cJSON *execution_time = cJSON_GetObjectItemCaseSensitive(nested_process, "execution_time");
-        cJSON *priority = cJSON_GetObjectItemCaseSensitive(nested_process, "priority");
-        cJSON *name = cJSON_GetObjectItemCaseSensitive(nested_process, "name");
-
-        if (!cJSON_IsNumber(arrived_at) || !cJSON_IsNumber(execution_time) || !cJSON_IsNumber(priority) || !cJSON_IsString(name))
-        {
-            status = 0;
-            break;
-        }
-        else
-        {
-            process proc;
-            proc.arrived_at = arrived_at->valueint;
-            proc.execution_time = execution_time->valueint;
-            proc.priority = priority->valueint;
-            strcpy(proc.name, name->valuestring);
-            process_array[config_file_size] = proc;
-            config_file_size++;
-            status = 1;
-        }
-    }
-
-    cJSON_Delete(config_json);
-    free(config);
-    return process_array;
-}
 
 Algorithm current_algorithm = FIFO;
 char *concat(const char *s1, const char *s2)
@@ -162,8 +82,8 @@ void load_algorithm(Algorithm fnc)
         task = get_sjf_output(proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = SJF;
         window_name_suffix = " (SJF)";
-        break; 
-        
+        break;
+
     case PRIORITY_P:
         task = get_priority_output(proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = PRIORITY_P;
@@ -419,7 +339,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     {
     case GEN_FILE:
         generate_config_file(ops);
-        proc_head = read_config_file("generated_config.json");
+        proc_head = read_config_file("generated_config.json", &config_file_size);
         if (proc_head != NULL)
         {
             show_message_box_();
@@ -510,7 +430,7 @@ int main(int argc, char *argv[])
             return 0;
         }
 
-        proc_head = read_config_file(argv[1]);
+        proc_head = read_config_file(argv[1], &config_file_size);
     }
 
     gtk_init(&argc, &argv);

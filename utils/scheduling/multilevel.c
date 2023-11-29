@@ -2,7 +2,7 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
 {
 
     *executed_tasks_size = 0;
-    priority_queue *queue = init_priority_queue(1000);
+    priority_queue *queue = init_priority_queue(100);
     if (queue == NULL)
     {
         printf("Allocation error");
@@ -13,9 +13,8 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
 
     int monitor_quantum = 0;
     process last_exec_proc = (process){-1, -1, -1, ""};
-    process *executed = (process *)malloc(sizeof(process) * process_array_size);
     sort_process_array_by_at(process_array, process_array_size);
-    while (!is_execution_done(executed, executed_size, process_array, process_array_size))
+    while (executed_size < process_array_size)
     {
 
         for (int i = 0; i < process_array_size; i++)
@@ -66,11 +65,9 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
                     }
                     else
                     {
-                        if (!is_in_old_list(execute, executed, executed_size))
-                        {
-                            executed[executed_size] = execute;
-                            executed_size++;
-                        }
+
+                        executed_size++;
+
                         add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
 
                         monitor_quantum = 0;
@@ -89,11 +86,7 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
                 }
                 else
                 {
-                    if (!is_in_old_list(execute, executed, executed_size))
-                    {
-                        executed[executed_size] = execute;
-                        executed_size++;
-                    }
+                    executed_size++;
                 }
 
                 add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));

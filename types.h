@@ -13,19 +13,6 @@ typedef struct options
     int algorithm;
 } options;
 
-typedef struct proc_in_queue
-{
-    process value;
-    struct proc_in_queue *next;
-} proc_in_queue;
-
-typedef struct proc_queue
-{
-    struct proc_in_queue *tail;
-    struct proc_in_queue *head;
-
-} proc_queue;
-
 typedef struct
 {
     int arrival_time;
@@ -35,16 +22,6 @@ typedef struct
     int color[4];
 } ExecutedTask;
 
-typedef struct Node
-{
-    process process;
-    struct Node *next;
-} Node;
-
-typedef struct priority_queue
-{
-    Node *front;
-} priority_queue;
 
 typedef struct
 {

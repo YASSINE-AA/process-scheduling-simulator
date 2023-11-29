@@ -1,7 +1,7 @@
-ExecutedTask *get_sjf_output(process *process_array, int process_array_size, int *executed_tasks_size)
+ExecutedTask *get_priority_np_output(process *process_array, int process_array_size, int *executed_tasks_size)
 {
     *executed_tasks_size = 0;
-    priority_queue *queue = init_priority_queue(1000);
+    priority_queue *queue = init_priority_queue(100);
     if (queue == NULL)
     {
         printf("Allocation error");
@@ -32,7 +32,7 @@ ExecutedTask *get_sjf_output(process *process_array, int process_array_size, int
     }
     sort_process_array_by_at(process_array, process_array_size);
 
-    while (!is_execution_done(executed, executed_size, process_array, process_array_size))
+    while (executed_size < process_array_size)
     {
         for (int i = 0; i < process_array_size; i++)
         {
@@ -40,23 +40,18 @@ ExecutedTask *get_sjf_output(process *process_array, int process_array_size, int
             {
                 in_queue[in_queue_size] = process_array[i];
                 in_queue_size++;
-                add_to_pr_queue(queue, process_array[i]);
+                add_to_pr_queue_p(queue, process_array[i]);
                 print_queue(queue, current_time);
             }
         }
         if (!is_pr_queue_empty(queue))
         {
-            process execute = remove_from_pr_queue(queue);
+            process execute = remove_from_pr_queue_p(queue);
             printf("removed %s\n", execute.name);
-            if (!is_in_old_list(execute, executed, executed_size))
-            {
-                executed[executed_size] = execute;
-                executed_size++;
-            }
-
+            executed_size++;
             add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + execute.execution_time, execute.arrived_at, execute.name));
             current_time += execute.execution_time;
-                }
+        }
         else
         {
             current_time++;

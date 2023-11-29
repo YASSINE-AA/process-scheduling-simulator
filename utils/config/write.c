@@ -1,8 +1,3 @@
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctype.h>
-
 int rand_dim = 20;
 
 void create_random_process_array(process processes[rand_dim]) {
@@ -30,12 +25,12 @@ void *generate_config_file(options ops) {
 
     char *string = NULL;
 
-    // Main attributes
+    
     cJSON *options = NULL;
     cJSON *process = NULL;
     cJSON *nested_process = NULL;
 
-    // Options
+    
     cJSON *quantum = NULL;
     cJSON *algorithm = NULL;
 
@@ -44,7 +39,7 @@ void *generate_config_file(options ops) {
         goto end;
     }
 
-    // Options Section
+    
     options = cJSON_CreateObject();
     if (options == NULL) {
         goto end;

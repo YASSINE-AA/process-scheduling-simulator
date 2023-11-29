@@ -13,6 +13,7 @@ void add_to_executed_tasks(ExecutedTask *executed_tasks, int *executed_tasks_siz
     executed_tasks[*executed_tasks_size] = task;
     (*executed_tasks_size)++;
 }
+
 ExecutedTask *format_executed_tasks(ExecutedTask *tasks, int *tasks_size, process *process_array, int process_array_size)
 {
     ExecutedTask current_task = tasks[0];
@@ -29,7 +30,7 @@ ExecutedTask *format_executed_tasks(ExecutedTask *tasks, int *tasks_size, proces
         if (strcmp(current_task.label, tasks[i].label) == 0 &&
             current_task.finish == tasks[i].start)
         {
-            current_task.finish = tasks[i].finish; // Update the finish time
+            current_task.finish = tasks[i].finish; 
         }
         else
         {

@@ -9,13 +9,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
     int in_queue_size = 0;
     int min_index = 0;
 
-    process *executed = (process *)malloc(sizeof(process) * process_array_size);
-    if (executed == NULL)
-    {
-        printf("Allocation failed!");
-        return NULL;
-    }
-
+  
     process *in_queue = (process *)malloc(sizeof(process) * process_array_size);
     if (in_queue == NULL)
     {
@@ -37,7 +31,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
         return NULL;
     }
     sort_process_array_by_at(process_array, process_array_size);
-    while (!is_execution_done(executed, executed_size, process_array, process_array_size))
+    while (executed_size < process_array_size)
     {
 
         for (int i = 0; i < process_array_size; i++)
@@ -58,9 +52,9 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
                 execute.execution_time -= quantum;
                 add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + quantum, execute.arrived_at, execute.name));
 
-                if (execute.execution_time == 0 && !is_in_old_list(execute, executed, executed_size))
+                if (execute.execution_time == 0)
                 {
-                    executed[executed_size] = execute;
+                    
                     executed_size++;
                     current_time += quantum;
                 }
@@ -83,7 +77,6 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
             else
             {
                 add_to_executed_tasks(tasks, tasks_size, get_task(current_time, current_time + execute.execution_time, execute.arrived_at, execute.name));
-                executed[executed_size] = execute;
                 executed_size++;
                 current_time += execute.execution_time;
             }

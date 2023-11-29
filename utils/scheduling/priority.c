@@ -1,8 +1,8 @@
-ExecutedTask *get_srt_output(process *process_array, int process_array_size, int *executed_tasks_size)
+ExecutedTask *get_priority_output(process *process_array, int process_array_size, int *executed_tasks_size)
 {
 
     *executed_tasks_size = 0;
-    priority_queue *queue = init_priority_queue(1000);
+    priority_queue *queue = init_priority_queue(100);
     if (queue == NULL)
     {
         printf("Allocation error");
@@ -13,23 +13,23 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
 
     process *executed = (process *)malloc(sizeof(process) * process_array_size);
     sort_process_array_by_at(process_array, process_array_size);
-    while (!is_execution_done(executed, executed_size, process_array, process_array_size))
+    while (executed_size < process_array_size)
     {
 
         for (int i = 0; i < process_array_size; i++)
         {
             if (process_array[i].arrived_at == current_time && !is_in_queue(queue, process_array[i].name))
             {
-                add_to_pr_queue(queue, process_array[i]);
+                add_to_pr_queue_p(queue, process_array[i]);
             }
         }
 
         if (!is_pr_queue_empty(queue))
         {
-            process execute = remove_from_pr_queue(queue);
-            if (get_front(queue).execution_time != -1 && execute.execution_time == get_front(queue).execution_time)
+            process execute = remove_from_pr_queue_p(queue);
+            if (get_front(queue).priority != -1 && execute.priority == get_front(queue).priority)
             {
-                while (get_front(queue).execution_time != -1 && execute.execution_time == get_front(queue).execution_time)
+                while (get_front(queue).priority != -1 && execute.priority == get_front(queue).priority)
                 {
 
                     execute.execution_time--;
@@ -37,11 +37,8 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                     current_time++;
                     if (execute.execution_time == 0)
                     {
-                        if (!is_in_old_list(execute, executed, executed_size))
-                        {
-                            executed[executed_size] = execute;
-                            executed_size++;
-                        }
+                        printf("%s finished execution\n", execute.name);
+                        executed_size++;
                         break;
                     }
 
@@ -49,13 +46,13 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                     {
                         if ((process_array[i].arrived_at == current_time) && !is_in_queue(queue, process_array[i].name))
                         {
-                            add_to_pr_queue(queue, process_array[i]);
+                            add_to_pr_queue_p(queue, process_array[i]);
                         }
                     }
                 }
                 if (execute.execution_time > 0 && !is_in_queue(queue, execute.name))
                 {
-                    add_to_pr_queue(queue, execute);
+                    add_to_pr_queue_p(queue, execute);
                 }
             }
             else
@@ -63,15 +60,11 @@ ExecutedTask *get_srt_output(process *process_array, int process_array_size, int
                 execute.execution_time--;
                 if (execute.execution_time > 0)
                 {
-                    add_to_pr_queue(queue, execute);
+                    add_to_pr_queue_p(queue, execute);
                 }
                 else
                 {
-                    if (!is_in_old_list(execute, executed, executed_size))
-                    {
-                        executed[executed_size] = execute;
-                        executed_size++;
-                    }
+                    executed_size++;
                 }
 
                 add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));
