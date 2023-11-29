@@ -123,7 +123,8 @@ void swap_exec_time(priority_queue *pq, process p)
     Node *current = pq->front;
     while (current != NULL)
     {
-        if(strcmp(current->process.name, p.name) == 0) {
+        if (strcmp(current->process.name, p.name) == 0)
+        {
             current->process.execution_time = p.execution_time;
             break;
         }
@@ -131,21 +132,23 @@ void swap_exec_time(priority_queue *pq, process p)
     }
 }
 
-
-bool is_queue_longer_than_two(priority_queue* pq) {
+bool is_queue_longer_than_two(priority_queue *pq)
+{
     bool val = false;
     int count = 0;
-    if(pq->front != NULL) {
-         Node* current = pq->front;
-         while(current->next != NULL) {
+    if (pq->front != NULL)
+    {
+        Node *current = pq->front;
+        while (current->next != NULL)
+        {
             count++;
             current = current->next;
-         }
-         if(count > 2) return true;
+        }
+        if (count > 2)
+            return true;
     }
 
     return false;
-   
 }
 
 process get_front(priority_queue *pq)
@@ -166,6 +169,7 @@ void add_to_pr_queue(priority_queue *pq, process new_process)
 
     if (pq->front == NULL || pq->front->process.execution_time > new_process.execution_time)
     {
+
         new_node->next = pq->front;
         pq->front = new_node;
     }
@@ -174,16 +178,15 @@ void add_to_pr_queue(priority_queue *pq, process new_process)
         Node *current = pq->front;
         Node *previous = NULL;
 
-        while (current != NULL && current->process.execution_time < new_process.execution_time)
+        while (current != NULL && current->process.execution_time <= new_process.execution_time)
         {
             previous = current;
             current = current->next;
         }
 
-        if (current != NULL && current->process.execution_time == new_process.execution_time)
+        if (current == NULL)
         {
-            new_node->next = current->next;
-            current->next = new_node;
+            previous->next = new_node;
         }
         else
         {
@@ -212,21 +215,24 @@ process remove_from_pr_queue(priority_queue *pq)
     return removed_process;
 }
 
-bool is_in_queue(priority_queue* pq, char* process_name) {
+bool is_in_queue(priority_queue *pq, char *process_name)
+{
     bool val = false;
-    if(pq->front != NULL) {
-          Node* current = pq->front;
-          while(current->next != NULL) {
-            if(strcmp(current->process.name, process_name) == 0) {
+    if (pq->front != NULL)
+    {
+        Node *current = pq->front;
+        while (current->next != NULL)
+        {
+            if (strcmp(current->process.name, process_name) == 0)
+            {
                 val = true;
                 break;
             }
             current = current->next;
-          }
-          return val;
+        }
+        return val;
     }
     return false;
-  
 }
 
 void add_to_pr_queue_p(priority_queue *pq, process new_process)
@@ -235,8 +241,9 @@ void add_to_pr_queue_p(priority_queue *pq, process new_process)
     new_node->process = new_process;
     new_node->next = NULL;
 
-    if (pq->front == NULL || pq->front->process.priority > new_process.priority)
+    if (pq->front == NULL || pq->front->process.execution_time > new_process.priority)
     {
+
         new_node->next = pq->front;
         pq->front = new_node;
     }
@@ -245,16 +252,15 @@ void add_to_pr_queue_p(priority_queue *pq, process new_process)
         Node *current = pq->front;
         Node *previous = NULL;
 
-        while (current != NULL && current->process.priority < new_process.priority)
+        while (current != NULL && current->process.execution_time <= new_process.priority)
         {
             previous = current;
             current = current->next;
         }
 
-        if (current != NULL && current->process.priority == new_process.priority)
+        if (current == NULL)
         {
-            new_node->next = current->next;
-            current->next = new_node;
+            previous->next = new_node;
         }
         else
         {
