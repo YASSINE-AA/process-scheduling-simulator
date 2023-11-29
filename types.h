@@ -51,3 +51,20 @@ typedef struct
     char *name;
     int finish;
 } finish_track;
+
+typedef enum
+{
+    GEN_FILE,
+    OPEN_METRICS
+} MenuFuncs;
+
+typedef enum
+{
+    FIFO,
+    MULTILEVEL,
+    PRIORITY,
+    PRIORITY_P,
+    RR,
+    SRT,
+    SJF
+} Algorithm;

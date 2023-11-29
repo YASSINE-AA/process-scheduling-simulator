@@ -1,7 +1,6 @@
-ExecutedTask *get_multilevel_output(process *process_array, int process_array_size, int *executed_tasks_size)
+ExecutedTask *get_multilevel_output(int quantum, process *process_array, int process_array_size, int *executed_tasks_size)
 {
 
-    int quantum = 2;
     *executed_tasks_size = 0;
     priority_queue *queue = init_priority_queue(1000);
     if (queue == NULL)

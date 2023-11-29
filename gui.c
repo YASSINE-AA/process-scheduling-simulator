@@ -19,6 +19,7 @@
 
 #include "./utils/gui/format.c"
 
+#include "./utils/algorithms/SJF.c"
 #include "./utils/algorithms/round_robin.c"
 #include "./utils/algorithms/FIFO.c"
 #include "./utils/algorithms/priority.c"
@@ -37,6 +38,7 @@ ExecutedTask tasks[100];
 process *proc_head;
 GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table;
 options ops;
+bool is_metrics_open = false;
 
 process *read_config_file(const char *filename)
 {
@@ -123,21 +125,6 @@ process *read_config_file(const char *filename)
     return process_array;
 }
 
-enum
-{
-    GEN_FILE
-};
-
-typedef enum
-{
-    FIFO,
-    MULTILEVEL,
-    PRIORITY,
-    PRIORITY_P,
-    RR,
-    SRT
-} Algorithm;
-
 Algorithm current_algorithm = FIFO;
 char *concat(const char *s1, const char *s2)
 {
@@ -171,7 +158,12 @@ void load_algorithm(Algorithm fnc)
         window_name_suffix = " (SRT)";
 
         break;
-
+    case SJF:
+        task = get_sjf_output(proc_head, config_file_size, &executed_tasks_size);
+        current_algorithm = SJF;
+        window_name_suffix = " (SJF)";
+        break; 
+        
     case PRIORITY_P:
         task = get_priority_output(proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = PRIORITY_P;
@@ -193,7 +185,7 @@ void load_algorithm(Algorithm fnc)
 
         break;
     case MULTILEVEL:
-        task = get_multilevel_output(proc_head, config_file_size, &executed_tasks_size);
+        task = get_multilevel_output(ops.quantum, proc_head, config_file_size, &executed_tasks_size);
         current_algorithm = MULTILEVEL;
         window_name_suffix = " (MULTILEVEL)";
 
@@ -298,6 +290,7 @@ void show_metrics_window()
     metrics_table = draw_metrics_table();
     gtk_container_add(GTK_CONTAINER(metrics_window), metrics_table);
     gtk_widget_show_all(metrics_window);
+    is_metrics_open = true;
 }
 
 void close_metrics_window()
@@ -436,13 +429,19 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
         }
 
         break;
+
+    case OPEN_METRICS:
+
+        if (!gtk_window_is_active(GTK_WINDOW(metrics_window)))
+            show_metrics_window();
+        break;
     }
 }
 
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
-    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_;
+    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_, *view_menu, *open_metrics, *view;
     menubar = gtk_menu_bar_new();
 
     menu = gtk_menu_new();
@@ -458,12 +457,16 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     menuitem = gtk_menu_item_new_with_label("Round Robin");
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(RR));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("SRT");
+    menuitem = gtk_menu_item_new_with_label("Shortest Remaining Time (SRT)");
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SRT));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("MULTILEVEL");
+    menuitem = gtk_menu_item_new_with_label("Shortest Job First (SJF)");
+    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SJF));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    menuitem = gtk_menu_item_new_with_label("Multilevel");
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(MULTILEVEL));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
     menuitem = gtk_menu_item_new_with_label("Algorithm");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
@@ -474,9 +477,15 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), generate_config);
     options_ = gtk_menu_item_new_with_label("Options");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(options_), options_menu);
-
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), options_);
 
+    view_menu = gtk_menu_new();
+    open_metrics = gtk_menu_item_new_with_label("View Metrics");
+    g_signal_connect(open_metrics, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_METRICS));
+    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), open_metrics);
+    view = gtk_menu_item_new_with_label("View");
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(view), view_menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), view);
     return menubar;
 }
 
@@ -525,7 +534,6 @@ int main(int argc, char *argv[])
 
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
     gtk_widget_show_all(window);
-    show_metrics_window();
     gtk_main();
     if (proc_head != NULL)
     {
