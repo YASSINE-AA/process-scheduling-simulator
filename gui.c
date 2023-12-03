@@ -41,11 +41,13 @@ int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
-GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table;
+GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics;
+cairo_surface_t *global_surface = NULL;
 options ops;
 bool is_metrics_open = false;
 
 Algorithm current_algorithm = FIFO;
+
 char *concat(const char *s1, const char *s2)
 {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
@@ -131,19 +133,24 @@ GtkWidget *draw_metrics_table()
 {
     GtkWidget *table = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(table), 10);
-    gtk_grid_set_column_spacing(GTK_GRID(table), 40);
+    gtk_grid_set_column_spacing(GTK_GRID(table), 60);
 
-    GtkWidget *label1 = gtk_label_new("Process Name");
+    GtkWidget *label1 = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label1), "<b> Process Name</b>");
     gtk_widget_set_halign(label1, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(label1, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), label1, 0, 0, 1, 1);
 
-    GtkWidget *label2 = gtk_label_new("Waiting time");
+    GtkWidget *label2 = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label2), "<b> Waiting Time</b>");
+
     gtk_widget_set_halign(label2, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(label2, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), label2, 1, 0, 1, 1);
 
-    GtkWidget *label3 = gtk_label_new("Rotation time");
+    GtkWidget *label3 = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label3), "<b> Rotation Time </b>");
+
     gtk_widget_set_halign(label3, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(label3, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), label3, 2, 0, 1, 1);
@@ -180,8 +187,10 @@ GtkWidget *draw_metrics_table()
 
         row++;
     }
-    gtk_window_set_default_size(GTK_WINDOW(metrics_window), 300, 10 * row);
-    GtkWidget *total_label = gtk_label_new("Average: ");
+    gtk_window_set_default_size(GTK_WINDOW(metrics_window), 400, 10 * row);
+    GtkWidget *total_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(total_label), "<b> Average: </b>");
+
     gtk_widget_set_halign(total_label, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(total_label, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), total_label, 0, row, 1, 1);
@@ -199,12 +208,21 @@ GtkWidget *draw_metrics_table()
     gtk_widget_set_halign(total_rotation_label, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(total_rotation_label, GTK_ALIGN_FILL);
     gtk_grid_attach(GTK_GRID(table), total_rotation_label, 2, row, 1, 1);
+
     return table;
+}
+
+gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(open_metrics), FALSE);
+    return FALSE;
 }
 
 void show_metrics_window()
 {
     metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(metrics_window, "delete-event", G_CALLBACK(on_delete_event), NULL);
+
     gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
     gtk_window_set_resizable(GTK_WINDOW(metrics_window), FALSE);
     metrics_table = draw_metrics_table();
@@ -251,10 +269,21 @@ static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
     load_algorithm(GPOINTER_TO_INT(fnc));
     update_metrics_window();
 }
+
+void export_to_png(char *filename)
+{
+    if (global_surface != NULL)
+    {
+        cairo_surface_write_to_png(global_surface, filename);
+    }
+}
+
 static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
     gint width = gtk_widget_get_allocated_width(widget);
     gint height = gtk_widget_get_allocated_height(widget);
+
+    global_surface = cairo_get_target(cr);
     double bar_height = height / (double)(executed_tasks_size + 1);
     double bar_width = width / (double)tasks[executed_tasks_size - 1].finish;
     cairo_set_source_rgb(cr, 0, 0, 0);
@@ -262,6 +291,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     cairo_move_to(cr, 0, height - bar_height);
     cairo_line_to(cr, width, height - bar_height);
     cairo_stroke(cr);
+
     for (int i = 0; i <= executed_tasks_size; i++)
     {
         double y = i * bar_height;
@@ -288,7 +318,6 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     for (int i = 0; i < executed_tasks_size; i++)
     {
-
         double x = tasks[i].start * bar_width;
         double y = i * bar_height;
         double task_width = (tasks[i].finish - tasks[i].start) * bar_width;
@@ -314,10 +343,10 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         cairo_move_to(cr, text_x, text_y);
         cairo_show_text(cr, tasks[i].label);
     }
+   
 
     return FALSE;
 }
-
 void show_message_box_()
 {
     GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -352,8 +381,20 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
 
     case OPEN_METRICS:
 
-        if (!gtk_window_is_active(GTK_WINDOW(metrics_window)))
+        if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuitem)))
+        {
+            close_metrics_window();
+        }
+        else
+        {
             show_metrics_window();
+        }
+        break;
+
+    case EXPORT_PNG:
+        printf("clicked");
+
+        export_to_png("./menu.png");
         break;
     }
 }
@@ -361,7 +402,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
-    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_, *view_menu, *open_metrics, *view;
+    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_, *view_menu, *view, *export, *export_png, *export_sub;
     menubar = gtk_menu_bar_new();
 
     menu = gtk_menu_new();
@@ -387,7 +428,7 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(MULTILEVEL));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-    menuitem = gtk_menu_item_new_with_label("Algorithm");
+    menuitem = gtk_menu_item_new_with_label("Algorithms");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
 
@@ -395,12 +436,23 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     generate_config = gtk_menu_item_new_with_label("Generate .json config file");
     g_signal_connect(generate_config, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(GEN_FILE));
     gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), generate_config);
+
+    export = gtk_menu_item_new_with_label("Export to");
+    gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), export);
+
+    export_sub = gtk_menu_new();
+    export_png = gtk_menu_item_new_with_label(".png");
+    g_signal_connect(export_png, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(EXPORT_PNG));
+    gtk_menu_shell_append(GTK_MENU_SHELL(export_sub), export_png);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(export), export_sub);
+
     options_ = gtk_menu_item_new_with_label("Options");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(options_), options_menu);
+
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), options_);
 
     view_menu = gtk_menu_new();
-    open_metrics = gtk_menu_item_new_with_label("View Metrics");
+    open_metrics = gtk_check_menu_item_new_with_label("View Metrics");
     g_signal_connect(open_metrics, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_METRICS));
     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), open_metrics);
     view = gtk_menu_item_new_with_label("View");
@@ -451,9 +503,10 @@ int main(int argc, char *argv[])
     drawing_area = gtk_drawing_area_new();
     gtk_widget_set_size_request(drawing_area, 600, 400);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw_event), NULL);
-
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
+
     gtk_widget_show_all(window);
+
     gtk_main();
     if (proc_head != NULL)
     {

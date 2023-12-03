@@ -32,7 +32,8 @@ typedef struct
 typedef enum
 {
     GEN_FILE,
-    OPEN_METRICS
+    OPEN_METRICS, 
+    EXPORT_PNG
 } MenuFuncs;
 
 typedef enum
