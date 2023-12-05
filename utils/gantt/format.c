@@ -1,3 +1,6 @@
+#include "format.h"
+
+
 ExecutedTask get_task(int start, int finish, int arrival_time, char *label)
 {
     ExecutedTask task;

@@ -1,3 +1,4 @@
+#include "queue.h"
 
 bool is_queue_empty(proc_queue *q)
 {

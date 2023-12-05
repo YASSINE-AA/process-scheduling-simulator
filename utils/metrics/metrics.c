@@ -1,3 +1,4 @@
+#include "metrics.h"
 
 
 int get_rotation_time(const char *process_name, ExecutedTask *executed, int executed_size)
