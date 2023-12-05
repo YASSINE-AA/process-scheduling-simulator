@@ -610,36 +610,46 @@ build/./main.c.o: main.c /usr/include/gtk-3.0/gtk/gtk.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
  /usr/include/gtk-3.0/gtk/gtk-autocleanups.h include/types.h \
  utils/scheduling/useful/useful.h \
- utils/scheduling/useful/../../../include/types.h \
+ utils/scheduling/useful/../useful/useful.h \
+ utils/scheduling/useful/../../gantt/format.h \
+ utils/scheduling/useful/../../gantt/../../include/types.h \
  utils/queues/fifo/queue.h utils/queues/fifo/../../../include/types.h \
  utils/queues/priority/priority_queue.h \
  utils/queues/priority/../../../include/types.h utils/gantt/format.h \
- utils/gantt/../../include/types.h utils/scheduling/SJF/SJF.h \
+ utils/scheduling/SJF/SJF.h \
  utils/scheduling/SJF/../../queues/priority/priority_queue.h \
  utils/scheduling/SJF/../../../include/types.h \
  utils/scheduling/SJF/../useful/useful.h \
+ utils/scheduling/SJF/../../gantt/format.h \
  utils/scheduling/RR/round_robin.h \
  utils/scheduling/RR/../../queues/fifo/queue.h \
  utils/scheduling/RR/../../../include/types.h \
- utils/scheduling/RR/../useful/useful.h utils/scheduling/FIFO/FIFO.h \
+ utils/scheduling/RR/../useful/useful.h \
+ utils/scheduling/RR/../../gantt/format.h utils/scheduling/FIFO/FIFO.h \
  utils/scheduling/FIFO/../../queues/fifo/queue.h \
  utils/scheduling/FIFO/../../../include/types.h \
  utils/scheduling/FIFO/../useful/useful.h \
+ utils/scheduling/FIFO/../../gantt/format.h \
  utils/scheduling/priority/priority.h \
  utils/scheduling/priority/../../queues/priority/priority_queue.h \
  utils/scheduling/priority/../../../include/types.h \
+ utils/scheduling/priority/../useful/useful.h \
+ utils/scheduling/priority/../../gantt/format.h \
  utils/scheduling/priority_np/priority_np.h \
  utils/scheduling/priority_np/../../queues/priority/priority_queue.h \
  utils/scheduling/priority_np/../../../include/types.h \
  utils/scheduling/priority_np/../useful/useful.h \
+ utils/scheduling/priority_np/../../gantt/format.h \
  utils/scheduling/multilevel/multilevel.h \
  utils/scheduling/multilevel/../../queues/priority/priority_queue.h \
  utils/scheduling/multilevel/../../../include/types.h \
  utils/scheduling/multilevel/../useful/useful.h \
+ utils/scheduling/multilevel/../../gantt/format.h \
  utils/scheduling/SRT/SRT.h \
  utils/scheduling/SRT/../../queues/priority/priority_queue.h \
  utils/scheduling/SRT/../../../include/types.h \
- utils/scheduling/SRT/../useful/useful.h utils/metrics/metrics.h \
+ utils/scheduling/SRT/../useful/useful.h \
+ utils/scheduling/SRT/../../gantt/format.h utils/metrics/metrics.h \
  utils/metrics/../../include/types.h utils/config/IO/write.h \
  utils/config/IO/../../../include/types.h utils/config/IO/read.h
 /usr/include/gtk-3.0/gtk/gtk.h:
@@ -1301,40 +1311,49 @@ build/./main.c.o: main.c /usr/include/gtk-3.0/gtk/gtk.h \
 /usr/include/gtk-3.0/gtk/gtk-autocleanups.h:
 include/types.h:
 utils/scheduling/useful/useful.h:
-utils/scheduling/useful/../../../include/types.h:
+utils/scheduling/useful/../useful/useful.h:
+utils/scheduling/useful/../../gantt/format.h:
+utils/scheduling/useful/../../gantt/../../include/types.h:
 utils/queues/fifo/queue.h:
 utils/queues/fifo/../../../include/types.h:
 utils/queues/priority/priority_queue.h:
 utils/queues/priority/../../../include/types.h:
 utils/gantt/format.h:
-utils/gantt/../../include/types.h:
 utils/scheduling/SJF/SJF.h:
 utils/scheduling/SJF/../../queues/priority/priority_queue.h:
 utils/scheduling/SJF/../../../include/types.h:
 utils/scheduling/SJF/../useful/useful.h:
+utils/scheduling/SJF/../../gantt/format.h:
 utils/scheduling/RR/round_robin.h:
 utils/scheduling/RR/../../queues/fifo/queue.h:
 utils/scheduling/RR/../../../include/types.h:
 utils/scheduling/RR/../useful/useful.h:
+utils/scheduling/RR/../../gantt/format.h:
 utils/scheduling/FIFO/FIFO.h:
 utils/scheduling/FIFO/../../queues/fifo/queue.h:
 utils/scheduling/FIFO/../../../include/types.h:
 utils/scheduling/FIFO/../useful/useful.h:
+utils/scheduling/FIFO/../../gantt/format.h:
 utils/scheduling/priority/priority.h:
 utils/scheduling/priority/../../queues/priority/priority_queue.h:
 utils/scheduling/priority/../../../include/types.h:
+utils/scheduling/priority/../useful/useful.h:
+utils/scheduling/priority/../../gantt/format.h:
 utils/scheduling/priority_np/priority_np.h:
 utils/scheduling/priority_np/../../queues/priority/priority_queue.h:
 utils/scheduling/priority_np/../../../include/types.h:
 utils/scheduling/priority_np/../useful/useful.h:
+utils/scheduling/priority_np/../../gantt/format.h:
 utils/scheduling/multilevel/multilevel.h:
 utils/scheduling/multilevel/../../queues/priority/priority_queue.h:
 utils/scheduling/multilevel/../../../include/types.h:
 utils/scheduling/multilevel/../useful/useful.h:
+utils/scheduling/multilevel/../../gantt/format.h:
 utils/scheduling/SRT/SRT.h:
 utils/scheduling/SRT/../../queues/priority/priority_queue.h:
 utils/scheduling/SRT/../../../include/types.h:
 utils/scheduling/SRT/../useful/useful.h:
+utils/scheduling/SRT/../../gantt/format.h:
 utils/metrics/metrics.h:
 utils/metrics/../../include/types.h:
 utils/config/IO/write.h:
