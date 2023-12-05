@@ -24,7 +24,6 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
             if (process_array[i].arrived_at == current_time && !is_in_queue(queue, process_array[i].name))
             {
                 add_to_pr_queue_p(queue, process_array[i]);
-                print_queue(queue, current_time);
             }
         }
 
@@ -40,11 +39,7 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
                         monitor_quantum = 1;
                     execute.execution_time -= 1;
                     last_exec_proc = execute;
-                    printf("process %s exec 1 unit\n", execute.name);
-
                     monitor_quantum++;
-                    printf("%d\n", monitor_quantum);
-
                     if (execute.execution_time > 0)
                     {
                         add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + 1, execute.arrived_at, execute.name));

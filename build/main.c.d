@@ -650,8 +650,10 @@ build/./main.c.o: main.c /usr/include/gtk-3.0/gtk/gtk.h \
  utils/scheduling/SRT/../../../include/types.h \
  utils/scheduling/SRT/../useful/useful.h \
  utils/scheduling/SRT/../../gantt/format.h utils/metrics/metrics.h \
- utils/metrics/../../include/types.h utils/config/IO/write.h \
- utils/config/IO/../../../include/types.h utils/config/IO/read.h
+ utils/metrics/../../include/types.h utils/config/IO/write/write.h \
+ utils/config/IO/write/../../../../include/types.h \
+ utils/config/IO/read/read.h \
+ utils/config/IO/read/../../../../include/types.h
 /usr/include/gtk-3.0/gtk/gtk.h:
 /usr/include/gtk-3.0/gdk/gdk.h:
 /usr/include/gtk-3.0/gdk/gdkconfig.h:
@@ -1356,6 +1358,7 @@ utils/scheduling/SRT/../useful/useful.h:
 utils/scheduling/SRT/../../gantt/format.h:
 utils/metrics/metrics.h:
 utils/metrics/../../include/types.h:
-utils/config/IO/write.h:
-utils/config/IO/../../../include/types.h:
-utils/config/IO/read.h:
+utils/config/IO/write/write.h:
+utils/config/IO/write/../../../../include/types.h:
+utils/config/IO/read/read.h:
+utils/config/IO/read/../../../../include/types.h:

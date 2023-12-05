@@ -24,8 +24,8 @@
 #include "./utils/scheduling/multilevel/multilevel.h"
 #include "./utils/scheduling/SRT/SRT.h"
 #include "./utils/metrics/metrics.h"
-#include "./utils/config/IO/write.h"
-#include "./utils/config/IO/read.h"
+#include "./utils/config/IO/write/write.h"
+#include "./utils/config/IO/read/read.h"
 
 const char *filename = "generated_config.json";
 int config_file_size = 0;
@@ -150,7 +150,6 @@ GtkWidget *draw_metrics_table()
     int col = 1;
     int total_rotation_time = 0;
     int total_waiting_time = 0;
-    printf("waiting time for p1: %d", get_waiting_time("p1", tasks, executed_tasks_size, proc_head, config_file_size));
     for (int i = 0; i < config_file_size; i++)
     {
         GtkWidget *label4 = gtk_label_new(proc_head[i].name);

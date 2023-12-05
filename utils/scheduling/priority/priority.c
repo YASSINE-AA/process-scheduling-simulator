@@ -40,7 +40,6 @@ ExecutedTask *get_priority_output(process *process_array, int process_array_size
                     current_time++;
                     if (execute.execution_time == 0)
                     {
-                        printf("%s finished execution\n", execute.name);
                         executed_size++;
                         break;
                     }

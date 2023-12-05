@@ -36,13 +36,11 @@ ExecutedTask *get_sjf_output(process *process_array, int process_array_size, int
                 in_queue[in_queue_size] = process_array[i];
                 in_queue_size++;
                 add_to_pr_queue(queue, process_array[i]);
-                print_queue(queue, current_time);
             }
         }
         if (!is_pr_queue_empty(queue))
         {
             process execute = remove_from_pr_queue(queue);
-            printf("removed %s\n", execute.name);
 
             executed_size++;
 

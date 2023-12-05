@@ -44,13 +44,11 @@ ExecutedTask *get_priority_np_output(process *process_array, int process_array_s
                 in_queue[in_queue_size] = process_array[i];
                 in_queue_size++;
                 add_to_pr_queue_p(queue, process_array[i]);
-                print_queue(queue, current_time);
             }
         }
         if (!is_pr_queue_empty(queue))
         {
             process execute = remove_from_pr_queue_p(queue);
-            printf("removed %s\n", execute.name);
             executed_size++;
             add_to_executed_tasks(executed_tasks, executed_tasks_size, get_task(current_time, current_time + execute.execution_time, execute.arrived_at, execute.name));
             current_time += execute.execution_time;

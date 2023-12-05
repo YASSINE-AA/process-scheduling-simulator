@@ -6,7 +6,7 @@
 #include <cjson/cJSON.h>
 #include <time.h>
 #include <string.h>
-#include "../../../include/types.h"
+#include "../../../../include/types.h"
 
 void create_random_process_array(process processes[]);
 void write_to_config(const char* content);
