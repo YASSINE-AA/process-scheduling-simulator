@@ -32,7 +32,7 @@ int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
-GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics;
+GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics, *settings_window, *view_settings;
 cairo_surface_t *global_surface = NULL;
 options ops;
 bool is_metrics_open = false;
@@ -201,17 +201,84 @@ GtkWidget *draw_metrics_table()
 
     return table;
 }
-
-gboolean on_delete_event(GtkWidget *widget, gpointer data)
+gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(open_metrics), FALSE);
+
+    switch (GPOINTER_TO_INT(user_data))
+    {
+    case SETTINGS_WINDOW:
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(view_settings), FALSE);
+        break;
+
+    case METRICS_WINDOW:
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(open_metrics), FALSE);
+        break;
+    }
+
     return FALSE;
+}
+void on_slider_value_changed(GtkWidget *slider, gpointer user_data)
+{
+    GtkLabel *label = GTK_LABEL(user_data);
+    int value = gtk_range_get_value(GTK_RANGE(slider));
+    gchar *label_text = g_strdup_printf("Current Quantum: %d", value);
+    modify_quantum_val(value);
+
+    proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
+    if (current_algorithm == RR)
+        load_algorithm(RR); // reload
+    gtk_label_set_text(label, label_text);
+    g_free(label_text);
+}
+
+void show_settings_window()
+{
+
+    settings_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(settings_window, "delete-event", G_CALLBACK(on_delete_event), GINT_TO_POINTER(SETTINGS_WINDOW));
+
+    gtk_window_set_title(GTK_WINDOW(settings_window), "Settings");
+    gtk_window_set_default_size(GTK_WINDOW(settings_window), 400, 240);
+    gtk_window_set_resizable(GTK_WINDOW(settings_window), FALSE);
+
+    GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
+
+    GtkWidget *settings_label = gtk_label_new("Settings");
+    gtk_widget_set_size_request(settings_label, 200, 100);
+    gtk_box_pack_start(GTK_BOX(vbox), settings_label, FALSE, FALSE, 0);
+
+    PangoFontDescription *font_desc = pango_font_description_new();
+    pango_font_description_set_size(font_desc, 20 * PANGO_SCALE);
+    pango_font_description_set_style(font_desc, PANGO_STYLE_OBLIQUE);
+    pango_font_description_set_weight(font_desc, PANGO_WEIGHT_BOLD);
+
+    gtk_widget_override_font(settings_label, font_desc);
+
+    pango_font_description_free(font_desc);
+
+    char *quantum_label_content = g_strdup_printf("Current Quantum: %d", ops.quantum);
+    GtkWidget *quantum_label = gtk_label_new(quantum_label_content);
+
+    g_free(quantum_label_content);
+    gtk_box_pack_start(GTK_BOX(vbox), quantum_label, FALSE, FALSE, 0);
+
+    GtkWidget *slider = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 1, 10, 1);
+    gtk_range_set_value(GTK_RANGE(slider), ops.quantum);
+    gtk_box_pack_start(GTK_BOX(vbox), slider, FALSE, FALSE, 0);
+    g_signal_connect(slider, "value-changed", G_CALLBACK(on_slider_value_changed), quantum_label);
+    gtk_container_add(GTK_CONTAINER(settings_window), vbox);
+    gtk_widget_show_all(settings_window);
+}
+
+void close_settings_window()
+{
+    gtk_window_close(GTK_WINDOW(settings_window));
 }
 
 void show_metrics_window()
 {
     metrics_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    g_signal_connect(metrics_window, "delete-event", G_CALLBACK(on_delete_event), NULL);
+    g_signal_connect(metrics_window, "delete-event", G_CALLBACK(on_delete_event), GINT_TO_POINTER(METRICS_WINDOW));
 
     gtk_window_set_title(GTK_WINDOW(metrics_window), "Metrics");
     gtk_window_set_resizable(GTK_WINDOW(metrics_window), FALSE);
@@ -259,12 +326,39 @@ static void on_algorithm_selected(GtkMenuItem *menuitem, gpointer fnc)
     load_algorithm(GPOINTER_TO_INT(fnc));
     update_metrics_window();
 }
-
-void export_to_png(char *filename)
+gboolean save_pixbuf_to_png(GdkPixbuf *pixbuf, const gchar *filename)
 {
-    if (global_surface != NULL)
+    if (pixbuf == NULL || filename == NULL)
     {
-        cairo_surface_write_to_png(global_surface, filename);
+        g_printerr("Invalid arguments for save_pixbuf_to_png\n");
+        return FALSE;
+    }
+
+    GError *error = NULL;
+    gboolean success = gdk_pixbuf_savev(pixbuf, filename, "png", NULL, NULL, &error);
+
+    if (!success)
+    {
+        g_printerr("Error saving Pixbuf to PNG: %s\n", error->message);
+        g_error_free(error);
+    }
+
+    return success;
+}
+void save_to_png(GtkWidget *drawing_area)
+{
+
+    gint width, height;
+    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
+    GdkPixbuf *pixbuf = gdk_pixbuf_get_from_window(
+        gtk_widget_get_window(drawing_area),
+        0, 0,
+        width, height);
+
+    if (pixbuf)
+    {
+        save_pixbuf_to_png(pixbuf, "output.png");
+        g_object_unref(pixbuf);
     }
 }
 
@@ -272,7 +366,6 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
     gint width = gtk_widget_get_allocated_width(widget);
     gint height = gtk_widget_get_allocated_height(widget);
-
     double bar_height = height / (double)(executed_tasks_size + 1);
     double bar_width = width / (double)tasks[executed_tasks_size - 1].finish;
     cairo_set_source_rgb(cr, 0, 0, 0);
@@ -333,8 +426,6 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         cairo_show_text(cr, tasks[i].label);
     }
 
-    global_surface = cairo_get_target(cr);
-
     return FALSE;
 }
 void show_message_box_()
@@ -358,7 +449,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     {
     case GEN_FILE:
         generate_config_file(ops);
-        proc_head = read_config_file("generated_config.json", &config_file_size);
+        proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
         if (proc_head != NULL)
         {
             show_message_box_();
@@ -381,8 +472,19 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
         }
         break;
 
+    case OPEN_SETTINGS:
+        if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuitem)))
+        {
+            close_settings_window();
+        }
+        else
+        {
+            show_settings_window();
+        }
+        break;
+
     case EXPORT_PNG:
-        export_to_png("./menu.png");
+        save_to_png(drawing_area);
         break;
     }
 }
@@ -443,6 +545,10 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     open_metrics = gtk_check_menu_item_new_with_label("View Metrics");
     g_signal_connect(open_metrics, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_METRICS));
     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), open_metrics);
+    view_settings = gtk_check_menu_item_new_with_label("View Settings");
+    g_signal_connect(view_settings, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_SETTINGS));
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), view_settings);
     view = gtk_menu_item_new_with_label("View");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(view), view_menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), view);
@@ -451,8 +557,6 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
 
 int main(int argc, char *argv[])
 {
-    printf("test");
-
     if (argc < 2)
     {
         printf("Please input the config file.\n");
@@ -470,7 +574,7 @@ int main(int argc, char *argv[])
             return 0;
         }
 
-        proc_head = read_config_file(argv[1], &config_file_size);
+        proc_head = read_config_file(argv[1], &config_file_size, &ops);
     }
 
     gtk_init(&argc, &argv);

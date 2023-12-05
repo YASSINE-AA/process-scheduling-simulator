@@ -1,6 +1,6 @@
 #include "read.h"
 
-process *read_config_file(const char *filename, int *config_file_size)
+process *read_config_file(const char *filename, int *config_file_size, options* ops)
 {
     *config_file_size = 0;
     process *process_array = malloc(12 * sizeof(process));
@@ -52,7 +52,13 @@ process *read_config_file(const char *filename, int *config_file_size)
 
     const cJSON *nested_process = NULL;
     const cJSON *process_list = NULL;
+    const cJSON *options_node = NULL;
+    const cJSON *quantum_node = NULL;
     int status = 0;
+
+    options_node = cJSON_GetObjectItemCaseSensitive(config_json, "options");
+    quantum_node = cJSON_GetObjectItemCaseSensitive(options_node, "quantum");
+    ops->quantum = quantum_node->valueint;
 
     process_list = cJSON_GetObjectItemCaseSensitive(config_json, "process");
     cJSON_ArrayForEach(nested_process, process_list)

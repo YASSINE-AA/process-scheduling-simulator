@@ -36,7 +36,8 @@ typedef enum
 {
     GEN_FILE,
     OPEN_METRICS, 
-    EXPORT_PNG
+    EXPORT_PNG, 
+    OPEN_SETTINGS
 } MenuFuncs;
 
 typedef enum
@@ -49,5 +50,10 @@ typedef enum
     SRT,
     SJF
 } Algorithm;
+
+typedef enum {
+    METRICS_WINDOW,
+    SETTINGS_WINDOW
+} Windows;
 
 #endif 

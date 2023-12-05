@@ -9,7 +9,6 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d) 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-# GTK3 flags
 GTK3_CFLAGS := $(shell pkg-config --cflags gtk+-3.0)
 GTK3_LDFLAGS := $(shell pkg-config --libs gtk+-3.0)
 

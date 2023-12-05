@@ -3,6 +3,69 @@
 
 int rand_dim = 20;
 
+
+bool modify_quantum_val(int new_value)
+{
+    char* filename = "generated_config.json";
+    FILE *fp = fopen(filename, "r+");
+
+    if (fp == NULL)
+    {
+        printf("Error: could not open file %s\n", filename);
+        return false;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char *config = (char *)malloc(file_size + 1);
+    if (config == NULL)
+    {
+        printf("Error: memory allocation failed\n");
+        fclose(fp);
+        return false;
+    }
+
+    fread(config, 1, file_size, fp);
+    config[file_size] = '\0';
+
+    fclose(fp);
+
+    cJSON *config_json = cJSON_Parse(config);
+    if (config_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        free(config);
+        return NULL;
+    }
+
+    const cJSON *nested_options = NULL;
+    const cJSON *options_list = NULL;
+    const cJSON *quantum_option = NULL;
+
+    options_list = cJSON_GetObjectItemCaseSensitive(config_json, "options");
+    quantum_option = cJSON_GetObjectItemCaseSensitive(options_list, "quantum");
+
+    cJSON_SetNumberValue(quantum_option, new_value);
+
+    char* string = cJSON_Print(config_json);
+    if (string == NULL) {
+        fprintf(stderr, "Failed to print config_file.\n");
+    }
+
+    cJSON_Delete(config_json);
+    const char* config_file_name = "generated_config.json";
+    write_to_config(string);
+
+    return true;
+}
+
+
 void create_random_process_array(process processes[rand_dim]) {
     srand(time(NULL)); 
     for (int i = 0; i < rand_dim; i++) {

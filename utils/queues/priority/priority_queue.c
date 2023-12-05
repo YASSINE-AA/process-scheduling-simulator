@@ -1,4 +1,5 @@
 #include "priority_queue.h"
+
 priority_queue *init_priority_queue()
 {
     priority_queue *pq = (priority_queue *)malloc(sizeof(priority_queue));

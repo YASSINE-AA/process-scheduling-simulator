@@ -7,6 +7,6 @@
 #include <string.h>
 #include "../../../../include/types.h"
 
-process *read_config_file(const char *filename, int *config_file_size);
+process *read_config_file(const char *filename, int *config_file_size, options* ops);
 
 #endif 
