@@ -1,9 +1,10 @@
 #ifndef FIFO_H
 #define FIFO_H
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "../../queues/fifo/queue.h"
 #include "../../../include/types.h"
 #include "../useful/useful.h"

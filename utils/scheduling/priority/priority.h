@@ -1,6 +1,10 @@
 #ifndef PRIORITY_H
 #define PRIORITY_H
-
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "../../queues/priority/priority_queue.h"
 #include "../../../include/types.h"
 #include "../useful/useful.h"

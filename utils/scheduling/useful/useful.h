@@ -1,8 +1,11 @@
 #ifndef USEFUL_H
 #define USEFUL_H
 
-#include <stdbool.h>
+#include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 #include "../useful/useful.h"
 #include "../../gantt/format.h"
 

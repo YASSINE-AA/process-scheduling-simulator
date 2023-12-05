@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include "../../include/types.h"
 
 int get_rotation_time(const char *process_name, ExecutedTask *executed, int executed_size);

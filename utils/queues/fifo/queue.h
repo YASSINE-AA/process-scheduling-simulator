@@ -1,9 +1,10 @@
 #ifndef QUEUE_H
 #define QUEUE_H
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "../../../include/types.h"
 
 typedef struct proc_in_queue

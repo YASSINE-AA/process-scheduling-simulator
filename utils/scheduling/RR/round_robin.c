@@ -10,8 +10,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
     int in_queue_size = 0;
     int min_index = 0;
 
-  
-    process *in_queue = (process *)malloc(sizeof(process) * process_array_size);
+    process *in_queue = (process *)malloc(sizeof(process) * 100);
     if (in_queue == NULL)
     {
         printf("Allocation failed!");
@@ -24,6 +23,7 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
         printf("Allocation failed!");
         return NULL;
     }
+        create_queue(queue);
 
     ExecutedTask *tasks = (ExecutedTask *)malloc(sizeof(ExecutedTask) * 100);
     if (tasks == NULL)
@@ -32,6 +32,8 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
         return NULL;
     }
     sort_process_array_by_at(process_array, process_array_size);
+
+
     while (executed_size < process_array_size)
     {
 
@@ -55,7 +57,6 @@ ExecutedTask *get_round_robin_output(int quantum, process *process_array, int pr
 
                 if (execute.execution_time == 0)
                 {
-                    
                     executed_size++;
                     current_time += quantum;
                 }
