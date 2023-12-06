@@ -253,7 +253,6 @@ bool match_regex(const char *str)
 bool save_settings(GtkWidget *btn, gpointer user_data)
 {
     char *max_exec_input_txt = gtk_entry_get_text(GTK_ENTRY(max_exec_input));
-    g_print("%d\n", match_regex(max_exec_input_txt));
     char *max_proc_input_txt = gtk_entry_get_text(GTK_ENTRY(max_proc_input));
     char *max_priority_input_txt = gtk_entry_get_text(GTK_ENTRY(max_priority_input));
     char *max_arrival_input_txt = gtk_entry_get_text(GTK_ENTRY(max_arrival_input));
@@ -264,10 +263,12 @@ bool save_settings(GtkWidget *btn, gpointer user_data)
         max_proc_range = max_proc_input_txt;
         priority_range = max_priority_input_txt;
         arrival_range = max_arrival_input_txt;
+        show_message_box_("Settings saved successfully!");
+        close_settings_window();
     }
     else
     {
-        show_message_box_("Invalid input. Please follow start-end format.");
+        show_message_box_("Invalid input. Please follow start-end (start < end) format.");
     }
 
     return FALSE;
