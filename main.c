@@ -1,4 +1,4 @@
-// gcc main.c -o gui `pkg-config --cflags --libs gtk+-3.0` -lcjson
+
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -9,6 +9,7 @@
 #include <cjson/cJSON.h>
 #include <stdio.h>
 #include <string.h>
+#include <regex.h>
 #include <stddef.h>
 
 #include "./include/types.h"
@@ -32,10 +33,12 @@ int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
-GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics, *settings_window, *view_settings;
-char* exec_range = "1-10";
-char* priority_range = "1-10";
-char* arrival_range = "1-10";
+GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics, *settings_window, *view_settings, *max_exec_input, *max_proc_input, *max_arrival_input, *max_priority_input;
+char *exec_range = "1-2";
+
+char *max_proc_range = "1-2";
+char *priority_range = "1-10";
+char *arrival_range = "1-10";
 
 cairo_surface_t *global_surface = NULL;
 options ops;
@@ -221,9 +224,53 @@ gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 
     return FALSE;
 }
+bool matchRegex(const char *str)
+{
+    regex_t re;
+    regmatch_t match[3];
+    int ret;
 
-void save_settings() {
+    if (regcomp(&re, "([0-9]+)-([0-9]+)", REG_EXTENDED) != 0)
+        return false;
 
+    ret = regexec(&re, str, sizeof(match) / sizeof(match[0]), match, 0);
+    regfree(&re);
+
+    if (ret == 0)
+    {
+        char group1Str[64], group2Str[64];
+        snprintf(group1Str, sizeof(group1Str), "%.*s", (int)(match[1].rm_eo - match[1].rm_so), str + match[1].rm_so);
+        snprintf(group2Str, sizeof(group2Str), "%.*s", (int)(match[2].rm_eo - match[2].rm_so), str + match[2].rm_so);
+        int start = strtol(group1Str, NULL, 10);
+        int end = strtol(group2Str, NULL, 10);
+        if (start < end)
+            return true;
+    }
+
+    return false;
+}
+
+bool save_settings(GtkWidget *btn, gpointer user_data)
+{
+    char *max_exec_input_txt = gtk_entry_get_text(GTK_ENTRY(max_exec_input));
+    g_print("%d\n", matchRegex(max_exec_input_txt));
+    char *max_proc_input_txt = gtk_entry_get_text(GTK_ENTRY(max_proc_input));
+    char *max_priority_input_txt = gtk_entry_get_text(GTK_ENTRY(max_priority_input));
+    char *max_arrival_input_txt = gtk_entry_get_text(GTK_ENTRY(max_arrival_input));
+
+    if (matchRegex(max_exec_input_txt) && matchRegex(max_proc_input_txt) && matchRegex(max_priority_input_txt) && matchRegex(max_arrival_input_txt))
+    {
+        exec_range = max_exec_input_txt;
+        max_proc_range = max_proc_input_txt;
+        priority_range = max_priority_input_txt;
+        arrival_range = max_arrival_input_txt;
+    }
+    else
+    {
+        show_message_box_("Invalid input. Please follow start-end format.");
+    }
+
+    return FALSE;
 }
 
 void on_slider_value_changed(GtkWidget *slider, gpointer user_data)
@@ -235,7 +282,7 @@ void on_slider_value_changed(GtkWidget *slider, gpointer user_data)
 
     proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
     if (current_algorithm == RR)
-        load_algorithm(RR); // reload
+        load_algorithm(RR);
     gtk_label_set_text(label, label_text);
     g_free(label_text);
 }
@@ -247,14 +294,10 @@ void show_settings_window()
     g_signal_connect(settings_window, "delete-event", G_CALLBACK(on_delete_event), GINT_TO_POINTER(SETTINGS_WINDOW));
 
     gtk_window_set_title(GTK_WINDOW(settings_window), "Settings");
-    gtk_window_set_default_size(GTK_WINDOW(settings_window), 400, 530);
+    gtk_window_set_default_size(GTK_WINDOW(settings_window), 400, 430);
     gtk_window_set_resizable(GTK_WINDOW(settings_window), FALSE);
 
     GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
-
-    GtkWidget *settings_label = gtk_label_new("Settings");
-    gtk_widget_set_size_request(settings_label, 200, 100);
-    gtk_box_pack_start(GTK_BOX(vbox), settings_label, FALSE, FALSE, 0);
 
     PangoFontDescription *font_desc = pango_font_description_new();
     pango_font_description_set_size(font_desc, 20 * PANGO_SCALE);
@@ -265,13 +308,11 @@ void show_settings_window()
     pango_font_description_set_size(sub_font_desc, 14 * PANGO_SCALE);
     pango_font_description_set_style(sub_font_desc, PANGO_STYLE_OBLIQUE);
     pango_font_description_set_weight(sub_font_desc, PANGO_WEIGHT_BOLD);
-    GtkWidget *round_robin_label = gtk_label_new("Process generation: ");
-    
+    GtkWidget *round_robin_label = gtk_label_new("Round robin: ");
+    gtk_widget_set_margin_top(round_robin_label, 15);
     gtk_widget_set_margin_bottom(round_robin_label, 15);
     gtk_box_pack_start(GTK_BOX(vbox), round_robin_label, FALSE, FALSE, 0);
     gtk_widget_override_font(round_robin_label, sub_font_desc);
-    gtk_box_pack_start(GTK_BOX(vbox), settings_label, FALSE, FALSE, 0);
-    gtk_widget_override_font(settings_label, font_desc);
 
     pango_font_description_free(font_desc);
 
@@ -285,15 +326,17 @@ void show_settings_window()
     gtk_range_set_value(GTK_RANGE(slider), ops.quantum);
     gtk_box_pack_start(GTK_BOX(vbox), slider, FALSE, FALSE, 0);
     g_signal_connect(slider, "value-changed", G_CALLBACK(on_slider_value_changed), quantum_label);
+    GtkWidget *separator1 = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(vbox), separator1, FALSE, FALSE, 0);
 
     GtkWidget *config_label = gtk_label_new("Process generation: ");
-    gtk_widget_set_margin_top(config_label, 50);
+    gtk_widget_set_margin_top(config_label, 15);
     gtk_widget_set_margin_bottom(config_label, 15);
     gtk_box_pack_start(GTK_BOX(vbox), config_label, FALSE, FALSE, 0);
     gtk_widget_override_font(config_label, sub_font_desc);
     GtkWidget *max_proc_hbox = gtk_hbox_new(FALSE, 20);
     GtkWidget *max_proc_label = gtk_label_new("Max processes: ");
-    GtkWidget *max_proc_input = gtk_entry_new();
+    max_proc_input = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(max_proc_input), "Ex: 2-10");
     gtk_widget_set_size_request(max_proc_input, 10, 20);
     gtk_box_pack_start(GTK_BOX(max_proc_hbox), max_proc_label, FALSE, FALSE, 0);
@@ -304,7 +347,7 @@ void show_settings_window()
 
     GtkWidget *max_exec_hbox = gtk_hbox_new(FALSE, 20);
     GtkWidget *max_exec_label = gtk_label_new("Burst time limit: ");
-    GtkWidget *max_exec_input = gtk_entry_new();
+    max_exec_input = gtk_entry_new();
     gtk_widget_set_size_request(max_exec_input, 10, 20);
     gtk_entry_set_placeholder_text(GTK_ENTRY(max_exec_input), "Ex: 3-10");
     gtk_widget_set_margin_bottom(max_exec_hbox, 15);
@@ -315,18 +358,31 @@ void show_settings_window()
 
     GtkWidget *max_priority_hbox = gtk_hbox_new(FALSE, 20);
     GtkWidget *max_priority_label = gtk_label_new("Priority limit: ");
-    GtkWidget *max_priority_input = gtk_entry_new();
+    max_priority_input = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(max_priority_input), "Ex: 3-10");
     gtk_widget_set_size_request(max_priority_input, 10, 20);
     gtk_box_pack_start(GTK_BOX(max_priority_hbox), max_priority_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(max_priority_hbox), max_priority_input, FALSE, FALSE, 0);
     gtk_widget_set_margin_left(max_priority_hbox, 60);
     gtk_box_pack_start(GTK_BOX(vbox), max_priority_hbox, FALSE, FALSE, 0);
+    gtk_widget_set_margin_bottom(max_priority_hbox, 15);
+    GtkWidget *max_arrival_hbox = gtk_hbox_new(FALSE, 20);
+    GtkWidget *max_arrival_label = gtk_label_new("Arrival limit: ");
+
+    max_arrival_input = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(max_arrival_input), "Ex: 3-10");
+    gtk_widget_set_size_request(max_arrival_input, 10, 20);
+    gtk_box_pack_start(GTK_BOX(max_arrival_hbox), max_arrival_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(max_arrival_hbox), max_arrival_input, FALSE, FALSE, 0);
+    gtk_widget_set_margin_left(max_arrival_hbox, 60);
+    gtk_box_pack_start(GTK_BOX(vbox), max_arrival_hbox, FALSE, FALSE, 0);
 
     GtkWidget *save_btn = gtk_button_new();
     gtk_widget_set_margin_top(save_btn, 25);
-    gtk_button_set_label(save_btn, (gchar*) "Save");
-        gtk_box_pack_start(GTK_BOX(vbox), save_btn, FALSE, FALSE, 0);
+    gtk_button_set_label(save_btn, (gchar *)"Save");
+
+    g_signal_connect(save_btn, "clicked", G_CALLBACK(save_settings), NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), save_btn, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(settings_window), vbox);
     gtk_widget_show_all(settings_window);
 }
@@ -489,14 +545,14 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     return FALSE;
 }
-void show_message_box_()
+void show_message_box_(const gchar *message)
 {
     GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
-    dialog = gtk_message_dialog_new(GTK_WINDOW(window),
-                                    flags,
-                                    GTK_MESSAGE_OTHER,
-                                    GTK_BUTTONS_CLOSE,
-                                    "Successfully generated config file.");
+    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+                                               flags,
+                                               GTK_MESSAGE_OTHER,
+                                               GTK_BUTTONS_CLOSE,
+                                               "%s", message);
 
     g_signal_connect_swapped(dialog, "response",
                              G_CALLBACK(gtk_widget_destroy),
@@ -509,11 +565,11 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     switch (GPOINTER_TO_INT(fnc))
     {
     case GEN_FILE:
-        generate_config_file(ops);
+        generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
         proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
         if (proc_head != NULL)
         {
-            show_message_box_();
+            show_message_box_("Successfully generated config file.");
             load_algorithm(current_algorithm);
 
             gtk_widget_queue_draw(drawing_area);
@@ -631,7 +687,7 @@ int main(int argc, char *argv[])
 
         if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0)
         {
-            generate_config_file(ops);
+            generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
             return 0;
         }
 

@@ -61,6 +61,7 @@ ExecutedTask *get_multilevel_output(int quantum, process *process_array, int pro
                         }
                     }
                     else
+                    
                     {
 
                         executed_size++;
