@@ -224,7 +224,7 @@ gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 
     return FALSE;
 }
-bool matchRegex(const char *str)
+bool match_regex(const char *str)
 {
     regex_t re;
     regmatch_t match[3];
@@ -253,12 +253,12 @@ bool matchRegex(const char *str)
 bool save_settings(GtkWidget *btn, gpointer user_data)
 {
     char *max_exec_input_txt = gtk_entry_get_text(GTK_ENTRY(max_exec_input));
-    g_print("%d\n", matchRegex(max_exec_input_txt));
+    g_print("%d\n", match_regex(max_exec_input_txt));
     char *max_proc_input_txt = gtk_entry_get_text(GTK_ENTRY(max_proc_input));
     char *max_priority_input_txt = gtk_entry_get_text(GTK_ENTRY(max_priority_input));
     char *max_arrival_input_txt = gtk_entry_get_text(GTK_ENTRY(max_arrival_input));
 
-    if (matchRegex(max_exec_input_txt) && matchRegex(max_proc_input_txt) && matchRegex(max_priority_input_txt) && matchRegex(max_arrival_input_txt))
+    if (match_regex(max_exec_input_txt) && match_regex(max_proc_input_txt) && match_regex(max_priority_input_txt) && match_regex(max_arrival_input_txt))
     {
         exec_range = max_exec_input_txt;
         max_proc_range = max_proc_input_txt;
