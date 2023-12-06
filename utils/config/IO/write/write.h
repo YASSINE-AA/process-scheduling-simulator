@@ -12,5 +12,5 @@
 bool modify_quantum_val(int new_value);
 void create_random_process_array(process processes[]);
 void write_to_config(const char *content);
-void *generate_config_file(options ops);
+void *generate_config_file(options ops, char* exec_range, char* priority_range, char* arrival_range);
 #endif

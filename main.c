@@ -33,6 +33,10 @@ int executed_tasks_size = 0;
 ExecutedTask tasks[100];
 process *proc_head;
 GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics, *settings_window, *view_settings;
+char* exec_range = "1-10";
+char* priority_range = "1-10";
+char* arrival_range = "1-10";
+
 cairo_surface_t *global_surface = NULL;
 options ops;
 bool is_metrics_open = false;
@@ -217,6 +221,11 @@ gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 
     return FALSE;
 }
+
+void save_settings() {
+
+}
+
 void on_slider_value_changed(GtkWidget *slider, gpointer user_data)
 {
     GtkLabel *label = GTK_LABEL(user_data);
@@ -238,7 +247,7 @@ void show_settings_window()
     g_signal_connect(settings_window, "delete-event", G_CALLBACK(on_delete_event), GINT_TO_POINTER(SETTINGS_WINDOW));
 
     gtk_window_set_title(GTK_WINDOW(settings_window), "Settings");
-    gtk_window_set_default_size(GTK_WINDOW(settings_window), 400, 240);
+    gtk_window_set_default_size(GTK_WINDOW(settings_window), 400, 530);
     gtk_window_set_resizable(GTK_WINDOW(settings_window), FALSE);
 
     GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
@@ -252,6 +261,16 @@ void show_settings_window()
     pango_font_description_set_style(font_desc, PANGO_STYLE_OBLIQUE);
     pango_font_description_set_weight(font_desc, PANGO_WEIGHT_BOLD);
 
+    PangoFontDescription *sub_font_desc = pango_font_description_new();
+    pango_font_description_set_size(sub_font_desc, 14 * PANGO_SCALE);
+    pango_font_description_set_style(sub_font_desc, PANGO_STYLE_OBLIQUE);
+    pango_font_description_set_weight(sub_font_desc, PANGO_WEIGHT_BOLD);
+    GtkWidget *round_robin_label = gtk_label_new("Process generation: ");
+    
+    gtk_widget_set_margin_bottom(round_robin_label, 15);
+    gtk_box_pack_start(GTK_BOX(vbox), round_robin_label, FALSE, FALSE, 0);
+    gtk_widget_override_font(round_robin_label, sub_font_desc);
+    gtk_box_pack_start(GTK_BOX(vbox), settings_label, FALSE, FALSE, 0);
     gtk_widget_override_font(settings_label, font_desc);
 
     pango_font_description_free(font_desc);
@@ -266,6 +285,48 @@ void show_settings_window()
     gtk_range_set_value(GTK_RANGE(slider), ops.quantum);
     gtk_box_pack_start(GTK_BOX(vbox), slider, FALSE, FALSE, 0);
     g_signal_connect(slider, "value-changed", G_CALLBACK(on_slider_value_changed), quantum_label);
+
+    GtkWidget *config_label = gtk_label_new("Process generation: ");
+    gtk_widget_set_margin_top(config_label, 50);
+    gtk_widget_set_margin_bottom(config_label, 15);
+    gtk_box_pack_start(GTK_BOX(vbox), config_label, FALSE, FALSE, 0);
+    gtk_widget_override_font(config_label, sub_font_desc);
+    GtkWidget *max_proc_hbox = gtk_hbox_new(FALSE, 20);
+    GtkWidget *max_proc_label = gtk_label_new("Max processes: ");
+    GtkWidget *max_proc_input = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(max_proc_input), "Ex: 2-10");
+    gtk_widget_set_size_request(max_proc_input, 10, 20);
+    gtk_box_pack_start(GTK_BOX(max_proc_hbox), max_proc_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(max_proc_hbox), max_proc_input, FALSE, FALSE, 0);
+    gtk_widget_set_margin_bottom(max_proc_hbox, 15);
+    gtk_widget_set_margin_left(max_proc_hbox, 60);
+    gtk_box_pack_start(GTK_BOX(vbox), max_proc_hbox, FALSE, FALSE, 0);
+
+    GtkWidget *max_exec_hbox = gtk_hbox_new(FALSE, 20);
+    GtkWidget *max_exec_label = gtk_label_new("Burst time limit: ");
+    GtkWidget *max_exec_input = gtk_entry_new();
+    gtk_widget_set_size_request(max_exec_input, 10, 20);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(max_exec_input), "Ex: 3-10");
+    gtk_widget_set_margin_bottom(max_exec_hbox, 15);
+    gtk_box_pack_start(GTK_BOX(max_exec_hbox), max_exec_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(max_exec_hbox), max_exec_input, FALSE, FALSE, 0);
+    gtk_widget_set_margin_left(max_exec_hbox, 60);
+    gtk_box_pack_start(GTK_BOX(vbox), max_exec_hbox, FALSE, FALSE, 0);
+
+    GtkWidget *max_priority_hbox = gtk_hbox_new(FALSE, 20);
+    GtkWidget *max_priority_label = gtk_label_new("Priority limit: ");
+    GtkWidget *max_priority_input = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(max_priority_input), "Ex: 3-10");
+    gtk_widget_set_size_request(max_priority_input, 10, 20);
+    gtk_box_pack_start(GTK_BOX(max_priority_hbox), max_priority_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(max_priority_hbox), max_priority_input, FALSE, FALSE, 0);
+    gtk_widget_set_margin_left(max_priority_hbox, 60);
+    gtk_box_pack_start(GTK_BOX(vbox), max_priority_hbox, FALSE, FALSE, 0);
+
+    GtkWidget *save_btn = gtk_button_new();
+    gtk_widget_set_margin_top(save_btn, 25);
+    gtk_button_set_label(save_btn, (gchar*) "Save");
+        gtk_box_pack_start(GTK_BOX(vbox), save_btn, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(settings_window), vbox);
     gtk_widget_show_all(settings_window);
 }

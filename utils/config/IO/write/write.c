@@ -82,7 +82,7 @@ void write_to_config(const char* content) {
     fclose(fptr);
 }
 
-void *generate_config_file(options ops) {
+void *generate_config_file(options ops, char* exec_range, char* priority_range, char* arrival_range) {
     srand(time(NULL)); 
     rand_dim = rand() % 10 + 2;
     
