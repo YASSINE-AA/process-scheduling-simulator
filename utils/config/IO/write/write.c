@@ -63,6 +63,81 @@ bool modify_quantum_val(int new_value)
     return true;
 }
 
+bool modify_ranges(char *proc_range, char *exec_range, char *priority_range, char *arrival_range)
+{
+    char *filename = "generated_config.json";
+    FILE *fp = fopen(filename, "r+");
+
+    if (fp == NULL)
+    {
+        printf("Error: could not open file %s\n", filename);
+        return false;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char *config = (char *)malloc(file_size + 1);
+    if (config == NULL)
+    {
+        printf("Error: memory allocation failed\n");
+        fclose(fp);
+        return false;
+    }
+
+    fread(config, 1, file_size, fp);
+    config[file_size] = '\0';
+
+    fclose(fp);
+
+    cJSON *config_json = cJSON_Parse(config);
+    if (config_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        free(config);
+        return NULL;
+    }
+
+    const cJSON *nested_options = NULL;
+    const cJSON *options_list = NULL;
+    cJSON *max_exec_option = NULL;
+    cJSON *max_proc_option = NULL;
+    cJSON *max_priority_option = NULL;
+    cJSON *max_arrival_option = NULL;
+
+    options_list = cJSON_GetObjectItemCaseSensitive(config_json, "options");
+    max_exec_option = cJSON_GetObjectItemCaseSensitive(options_list, "max_exec");
+    max_proc_option = cJSON_GetObjectItemCaseSensitive(options_list, "max_proc");
+    max_priority_option = cJSON_GetObjectItemCaseSensitive(options_list, "max_priority");
+    max_arrival_option = cJSON_GetObjectItemCaseSensitive(options_list, "max_arrival");
+
+    cJSON_SetValuestring(max_exec_option, exec_range);
+
+    cJSON_SetValuestring(max_proc_option, proc_range);
+
+    cJSON_SetValuestring(max_priority_option, priority_range);
+
+    cJSON_SetValuestring(max_arrival_option, arrival_range);
+    
+
+    char *string = cJSON_Print(config_json);
+    if (string == NULL)
+    {
+        fprintf(stderr, "Failed to print config_file.\n");
+    }
+
+    cJSON_Delete(config_json);
+    const char *config_file_name = "generated_config.json";
+    write_to_config(string);
+
+    return true;
+}
+
 void set_ranges(char range[100], int *range_start, int *range_end)
 {
     *range_start = -1;
@@ -147,6 +222,11 @@ void *generate_config_file(options ops, char *max_proc_range, char *exec_range, 
     cJSON *quantum = NULL;
     cJSON *algorithm = NULL;
 
+    cJSON *max_exec_option = NULL;
+    cJSON *max_proc_option = NULL;
+    cJSON *max_priority_option = NULL;
+    cJSON *max_arrival_option = NULL;
+
     cJSON *config_file = cJSON_CreateObject();
     if (config_file == NULL)
     {
@@ -182,6 +262,33 @@ void *generate_config_file(options ops, char *max_proc_range, char *exec_range, 
         goto end;
     }
     cJSON_AddItemToObject(options, "algorithm", algorithm);
+
+    max_proc_option = cJSON_CreateString(max_proc_range);
+    if (max_proc_option == NULL)
+    {
+        goto end;
+    }
+    cJSON_AddItemToObject(options, "max_proc", max_proc_option);
+
+    max_exec_option = cJSON_CreateString(exec_range);
+    if (max_exec_option == NULL)
+    {
+        goto end;
+    }
+    cJSON_AddItemToObject(options, "max_exec", max_exec_option);
+    max_priority_option = cJSON_CreateString(priority_range);
+    if (max_priority_option == NULL)
+    {
+        goto end;
+    }
+    cJSON_AddItemToObject(options, "max_priority", max_priority_option);
+
+    max_arrival_option = cJSON_CreateString(arrival_range);
+    if (max_arrival_option == NULL)
+    {
+        goto end;
+    }
+    cJSON_AddItemToObject(options, "max_arrival", max_arrival_option);
 
     for (size_t index = 0; index < dim; ++index)
     {

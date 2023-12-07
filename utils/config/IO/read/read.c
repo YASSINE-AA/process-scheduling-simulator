@@ -1,6 +1,54 @@
 #include "read.h"
+bool load_settings(char **proc_range, char **exec_range, char **priority_range, char **arrival_range)
+{
+    FILE *fp = fopen("generated_config.json", "r");
 
-process *read_config_file(const char *filename, int *config_file_size, options* ops)
+    if (fp == NULL)
+    {
+        printf("Error: could not open file %s\n", "generated_config.json");
+        return false;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char *config = (char *)malloc(file_size + 1);
+    if (config == NULL)
+    {
+        printf("Error: memory allocation failed\n");
+        fclose(fp);
+        return false;
+    }
+
+    fread(config, 1, file_size, fp);
+    config[file_size] = '\0';
+
+    fclose(fp);
+
+    cJSON *config_json = cJSON_Parse(config);
+    if (config_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        free(config);
+        return false;
+    }
+
+    const cJSON *options_node = cJSON_GetObjectItemCaseSensitive(config_json, "options");
+    *proc_range = strdup(cJSON_GetObjectItemCaseSensitive(options_node, "max_proc")->valuestring);
+    *exec_range = strdup(cJSON_GetObjectItemCaseSensitive(options_node, "max_exec")->valuestring);
+    *priority_range = strdup(cJSON_GetObjectItemCaseSensitive(options_node, "max_priority")->valuestring);
+    *arrival_range = strdup(cJSON_GetObjectItemCaseSensitive(options_node, "max_arrival")->valuestring);
+
+    cJSON_Delete(config_json);
+    free(config);
+    return true;
+}
+process *read_config_file(const char *filename, int *config_file_size, options *ops)
 {
     *config_file_size = 0;
     process *process_array = malloc(12 * sizeof(process));

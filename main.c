@@ -36,7 +36,7 @@ process *proc_head;
 GtkWidget *window, *drawing_area, *vbox, *dialog, *metrics_window, *metrics_table, *open_metrics, *settings_window, *view_settings, *max_exec_input, *max_proc_input, *max_arrival_input, *max_priority_input;
 char *exec_range = "1-2";
 
-char *max_proc_range = "1-2";
+char *max_proc_range = "1-10";
 char *priority_range = "1-10";
 char *arrival_range = "1-10";
 
@@ -263,6 +263,9 @@ bool save_settings(GtkWidget *btn, gpointer user_data)
         max_proc_range = max_proc_input_txt;
         priority_range = max_priority_input_txt;
         arrival_range = max_arrival_input_txt;
+        if (!modify_ranges(max_proc_range, exec_range, priority_range, arrival_range))
+            return false;
+        load_settings(&max_proc_range, &exec_range, &priority_range, &arrival_range);
         show_message_box_("Settings saved successfully!");
         close_settings_window();
     }
@@ -566,6 +569,7 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     switch (GPOINTER_TO_INT(fnc))
     {
     case GEN_FILE:
+
         generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
         proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
         if (proc_head != NULL)
@@ -688,11 +692,14 @@ int main(int argc, char *argv[])
 
         if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0)
         {
+
+            g_print("%s", exec_range);
             generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
             return 0;
         }
 
         proc_head = read_config_file(argv[1], &config_file_size, &ops);
+        load_settings(&max_proc_range, &exec_range, &priority_range, &arrival_range);
     }
 
     gtk_init(&argc, &argv);
