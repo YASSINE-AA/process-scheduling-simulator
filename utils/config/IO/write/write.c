@@ -163,12 +163,12 @@ int create_random_process_array(process processes[100], int max_proc_range_start
 {
 
     srand(time(NULL));
-    int dim = rand() % (max_proc_range_end - max_proc_range_start) + max_proc_range_start;
+    int dim = rand() % (max_proc_range_end - max_proc_range_start + 1) + max_proc_range_start;
     for (int i = 0; i < dim; i++)
     {
-        processes[i].arrived_at = rand() % (arrival_range_end - arrival_range_start) + arrival_range_start;
-        processes[i].execution_time = rand() % (exec_range_end - exec_range_start) + exec_range_start;
-        processes[i].priority = rand() % (priority_range_end - priority_range_start) + priority_range_start;
+        processes[i].arrived_at = rand() % (arrival_range_end - arrival_range_start + 1) + arrival_range_start;
+        processes[i].execution_time = rand() % (exec_range_end - exec_range_start + 1) + exec_range_start;
+        processes[i].priority = rand() % (priority_range_end - priority_range_start + 1) + priority_range_start;
         snprintf(processes[i].name, sizeof(processes[i].name), "p%d", i + 1);
     }
 
@@ -220,7 +220,7 @@ void *generate_config_file(options ops, char *max_proc_range, char *exec_range, 
     cJSON *nested_process = NULL;
 
     cJSON *quantum = NULL;
-    cJSON *algorithm = NULL;
+
 
     cJSON *max_exec_option = NULL;
     cJSON *max_proc_option = NULL;
@@ -256,13 +256,7 @@ void *generate_config_file(options ops, char *max_proc_range, char *exec_range, 
     }
     cJSON_AddItemToObject(options, "quantum", quantum);
 
-    algorithm = cJSON_CreateNumber(ops.algorithm);
-    if (algorithm == NULL)
-    {
-        goto end;
-    }
-    cJSON_AddItemToObject(options, "algorithm", algorithm);
-
+    
     max_proc_option = cJSON_CreateString(max_proc_range);
     if (max_proc_option == NULL)
     {

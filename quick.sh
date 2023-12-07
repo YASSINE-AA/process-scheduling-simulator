@@ -13,4 +13,4 @@ cd build
 
     cd ..
 
-make clean
+#make clean

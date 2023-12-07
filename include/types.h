@@ -22,7 +22,7 @@ typedef struct ExecutedTask
     int start;
     int finish;
     const char *label;
-    int color[4];
+    double color[4];
 } ExecutedTask;
 
 
@@ -53,7 +53,8 @@ typedef enum
 
 typedef enum {
     METRICS_WINDOW,
-    SETTINGS_WINDOW
+    SETTINGS_WINDOW,
+    MAIN_WINDOW
 } Windows;
 
 #endif 

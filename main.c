@@ -220,6 +220,10 @@ gboolean on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     case METRICS_WINDOW:
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(open_metrics), FALSE);
         break;
+
+    case MAIN_WINDOW:
+        show_about_dialog();
+        break;
     }
 
     return FALSE;
@@ -264,10 +268,23 @@ bool save_settings(GtkWidget *btn, gpointer user_data)
         priority_range = max_priority_input_txt;
         arrival_range = max_arrival_input_txt;
         if (!modify_ranges(max_proc_range, exec_range, priority_range, arrival_range))
-            return false;
+            return FALSE;
         load_settings(&max_proc_range, &exec_range, &priority_range, &arrival_range);
-        show_message_box_("Settings saved successfully!");
-        close_settings_window();
+        generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
+        proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
+        if (proc_head != NULL)
+        {
+            load_algorithm(current_algorithm);
+            gtk_widget_queue_draw(drawing_area);
+            show_message_box_("Settings saved successfully!");
+            close_settings_window();
+            return TRUE;
+        }
+        else
+        {
+            show_message_box_("There has been an issue generating file.");
+            return FALSE;
+        }
     }
     else
     {
@@ -383,7 +400,7 @@ void show_settings_window()
 
     GtkWidget *save_btn = gtk_button_new();
     gtk_widget_set_margin_top(save_btn, 25);
-    gtk_button_set_label(save_btn, (gchar *)"Save");
+    gtk_button_set_label(save_btn, (gchar *)"Save & Generate");
 
     g_signal_connect(save_btn, "clicked", G_CALLBACK(save_settings), NULL);
     gtk_box_pack_start(GTK_BOX(vbox), save_btn, FALSE, FALSE, 0);
@@ -495,7 +512,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
     cairo_line_to(cr, width, height - bar_height);
     cairo_stroke(cr);
 
-    for (int i = 0; i <= executed_tasks_size; i++)
+    for (int i = 0; i < executed_tasks_size; i++)
     {
         double y = i * bar_height;
 
@@ -503,20 +520,17 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         cairo_line_to(cr, width, y);
         cairo_stroke(cr);
 
-        if (i < executed_tasks_size)
-        {
-            cairo_set_source_rgb(cr, 0, 0, 0);
-            cairo_move_to(cr, 5, y + bar_height / 2);
-            cairo_show_text(cr, tasks[i].label);
-            char start_time_str[10];
-            snprintf(start_time_str, sizeof(start_time_str), "%d", tasks[i].start);
-            cairo_move_to(cr, tasks[i].start * bar_width, height - bar_height / 2);
-            cairo_show_text(cr, start_time_str);
-            char end_time_str[10];
-            snprintf(end_time_str, sizeof(end_time_str), "%d", tasks[i].finish);
-            cairo_move_to(cr, tasks[i].finish * bar_width, height - bar_height / 2);
-            cairo_show_text(cr, end_time_str);
-        }
+        cairo_set_source_rgb(cr, 0, 0, 0);
+        cairo_move_to(cr, 5, y + bar_height / 2);
+        cairo_show_text(cr, tasks[i].label);
+        char start_time_str[10];
+        snprintf(start_time_str, sizeof(start_time_str), "%d", tasks[i].start);
+        cairo_move_to(cr, tasks[i].start * bar_width, height - bar_height / 2);
+        cairo_show_text(cr, start_time_str);
+        char end_time_str[10];
+        snprintf(end_time_str, sizeof(end_time_str), "%d", tasks[i].finish);
+        cairo_move_to(cr, tasks[i].finish * bar_width, height - bar_height / 2);
+        cairo_show_text(cr, end_time_str);
     }
 
     for (int i = 0; i < executed_tasks_size; i++)
@@ -525,7 +539,7 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer data)
         double y = i * bar_height;
         double task_width = (tasks[i].finish - tasks[i].start) * bar_width;
 
-        cairo_set_source_rgba(cr, 0, 0, 1, 0.4);
+        cairo_set_source_rgba(cr, tasks[i].color[0], tasks[i].color[1], tasks[i].color[2], tasks[i].color[3]);
         cairo_rectangle(cr, x, y, task_width, bar_height);
         cairo_fill_preserve(cr);
 
@@ -614,39 +628,58 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
 static GtkWidget *create_menu(GtkWidget *drawing_area)
 {
 
-    GtkWidget *menubar, *menu, *menuitem, *options_menu, *generate_config, *options_, *view_menu, *view, *export, *export_png, *export_sub;
+    GtkWidget *menubar, *algo, *menu, *fifo, *priority, *priority_np, *round_robin, *srt, *sjf, *multilevel, *options_menu, *generate_config, *options_, *view_menu, *view, *export, *export_png, *export_sub;
     menubar = gtk_menu_bar_new();
-
+    GtkAccelGroup *accel_group = gtk_accel_group_new();
+    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
     menu = gtk_menu_new();
-    menuitem = gtk_menu_item_new_with_label("First Come First Serve (FIFO)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(FIFO));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Priority (preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY_P));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Priority (non-preemptive)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Round Robin");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(RR));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Shortest Remaining Time (SRT)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SRT));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Shortest Job First (SJF)");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SJF));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    menuitem = gtk_menu_item_new_with_label("Multilevel");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(MULTILEVEL));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    fifo = gtk_menu_item_new_with_label("First Come First Serve (FIFO)");
+    gtk_widget_add_accelerator(fifo, "activate", accel_group,
+                               GDK_KEY_1, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(fifo, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(FIFO));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), fifo);
+    priority = gtk_menu_item_new_with_label("Priority (preemptive)");
+    gtk_widget_add_accelerator(priority, "activate", accel_group,
+                               GDK_KEY_2, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(priority, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY_P));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), priority);
+    priority_np = gtk_menu_item_new_with_label("Priority (non-preemptive)");
+    gtk_widget_add_accelerator(priority_np, "activate", accel_group,
+                               GDK_KEY_3, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(priority_np, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(PRIORITY));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), priority_np);
+    round_robin = gtk_menu_item_new_with_label("Round Robin");
+    gtk_widget_add_accelerator(round_robin, "activate", accel_group,
+                               GDK_KEY_4, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(round_robin, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(RR));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), round_robin);
+    srt = gtk_menu_item_new_with_label("Shortest Remaining Time (SRT)");
+    gtk_widget_add_accelerator(srt, "activate", accel_group,
+                               GDK_KEY_5, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(srt, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SRT));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), srt);
+    sjf = gtk_menu_item_new_with_label("Shortest Job First (SJF)");
+    gtk_widget_add_accelerator(sjf, "activate", accel_group,
+                               GDK_KEY_6, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(sjf, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(SJF));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), sjf);
+    multilevel = gtk_menu_item_new_with_label("Multilevel");
+    gtk_widget_add_accelerator(multilevel, "activate", accel_group,
+                               GDK_KEY_6, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    g_signal_connect(multilevel, "activate", G_CALLBACK(on_algorithm_selected), GINT_TO_POINTER(MULTILEVEL));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), multilevel);
 
-    menuitem = gtk_menu_item_new_with_label("Algorithms");
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), menuitem);
+    algo = gtk_menu_item_new_with_label("Algorithms");
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(algo), menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), algo);
 
     options_menu = gtk_menu_new();
     generate_config = gtk_menu_item_new_with_label("Generate .json config file");
     g_signal_connect(generate_config, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(GEN_FILE));
+
+    gtk_widget_add_accelerator(generate_config, "activate", accel_group,
+                               GDK_KEY_g, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
     gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), generate_config);
 
     export = gtk_menu_item_new_with_label("Export to");
@@ -665,9 +698,13 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
 
     view_menu = gtk_menu_new();
     open_metrics = gtk_check_menu_item_new_with_label("View Metrics");
+    gtk_widget_add_accelerator(open_metrics, "activate", accel_group,
+                               GDK_KEY_m, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     g_signal_connect(open_metrics, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_METRICS));
     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), open_metrics);
     view_settings = gtk_check_menu_item_new_with_label("View Settings");
+    gtk_widget_add_accelerator(view_settings, "activate", accel_group,
+                               GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     g_signal_connect(view_settings, "activate", G_CALLBACK(on_option_selected), GINT_TO_POINTER(OPEN_SETTINGS));
 
     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), view_settings);
@@ -677,8 +714,30 @@ static GtkWidget *create_menu(GtkWidget *drawing_area)
     return menubar;
 }
 
+void show_about_dialog()
+{
+    GtkWidget *dialog = gtk_about_dialog_new();
+
+    gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(dialog), "Process Scheduler");
+    gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "1.0");
+
+    const gchar *authors[] = {"Yassine Ahmed Ali", "Dhiee Hmem", "Adem Yahya", NULL};
+
+    gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(dialog), authors);
+
+    gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog), "https://github.com/YASSINE-AA");
+
+    GdkPixbuf *logo = gdk_pixbuf_new_from_file("./logo.png", NULL);
+    gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), logo);
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
+
     if (argc < 2)
     {
         printf("Please input the config file.\n");
@@ -687,7 +746,6 @@ int main(int argc, char *argv[])
     else
     {
 
-        ops.algorithm = 10;
         ops.quantum = 3;
 
         if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0)
@@ -723,6 +781,7 @@ int main(int argc, char *argv[])
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
 
     gtk_widget_show_all(window);
+    g_signal_connect(window, "delete-event", G_CALLBACK(on_delete_event), GINT_TO_POINTER(MAIN_WINDOW));
 
     gtk_main();
     if (proc_head != NULL)

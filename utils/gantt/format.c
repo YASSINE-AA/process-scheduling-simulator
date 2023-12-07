@@ -1,6 +1,5 @@
 #include "format.h"
 
-
 ExecutedTask get_task(int start, int finish, int arrival_time, char *label)
 {
     ExecutedTask task;
@@ -8,6 +7,13 @@ ExecutedTask get_task(int start, int finish, int arrival_time, char *label)
     task.start = start;
     task.finish = finish;
     task.arrival_time = arrival_time;
+
+   
+    task.color[0] = (double)rand() / RAND_MAX;
+    task.color[1] = (double)rand() / RAND_MAX;
+    task.color[2] = (double)rand() / RAND_MAX;
+    task.color[3] = (double)rand() / RAND_MAX;
+
     return task;
 }
 
