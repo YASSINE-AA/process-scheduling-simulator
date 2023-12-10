@@ -29,4 +29,13 @@ $(BUILD_DIR)/%.c.o: %.c
 clean:
 	rm -r $(BUILD_DIR)
 
+install:
+	@if [ -w "/usr/local/bin/" ]; then \
+	install ./build/final_program /usr/local/bin/scheduler; \
+	echo "Installation successful!"; \
+	else \
+	echo "Error: Insufficient privileges to install in /usr/local/bin/. Please run 'make install' with elevated privileges (sudo)."; \
+	exit 0; \
+    fi
+
 -include $(DEPS)

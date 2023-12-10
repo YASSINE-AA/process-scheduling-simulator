@@ -1,14 +1,13 @@
 
 #include "write.h"
 
-bool modify_quantum_val(int new_value)
+bool modify_quantum_val(const char* config_filename, int new_value)
 {
-    char *filename = "generated_config.json";
-    FILE *fp = fopen(filename, "r+");
+    FILE *fp = fopen(config_filename, "r+");
 
     if (fp == NULL)
     {
-        printf("Error: could not open file %s\n", filename);
+        printf("Error: could not open file %s\n", config_filename);
         return false;
     }
 
@@ -57,20 +56,19 @@ bool modify_quantum_val(int new_value)
     }
 
     cJSON_Delete(config_json);
-    const char *config_file_name = "generated_config.json";
-    write_to_config(string);
+    write_to_config(config_filename, string);
 
     return true;
 }
 
-bool modify_ranges(char *proc_range, char *exec_range, char *priority_range, char *arrival_range)
+bool modify_ranges(const char* config_filename, char *proc_range, char *exec_range, char *priority_range, char *arrival_range)
 {
-    char *filename = "generated_config.json";
-    FILE *fp = fopen(filename, "r+");
+
+    FILE *fp = fopen(config_filename, "r+");
 
     if (fp == NULL)
     {
-        printf("Error: could not open file %s\n", filename);
+        printf("Error: could not open file %s\n", config_filename);
         return false;
     }
 
@@ -132,8 +130,7 @@ bool modify_ranges(char *proc_range, char *exec_range, char *priority_range, cha
     }
 
     cJSON_Delete(config_json);
-    const char *config_file_name = "generated_config.json";
-    write_to_config(string);
+    write_to_config(config_filename, string);
 
     return true;
 }
@@ -175,14 +172,14 @@ int create_random_process_array(process processes[100], int max_proc_range_start
     return dim;
 }
 
-void write_to_config(const char *content)
+void write_to_config(const char* config_filename, const char *content)
 {
-    FILE *fptr = fopen("generated_config.json", "w");
+    FILE *fptr = fopen(config_filename, "w");
     fprintf(fptr, "%s", content);
     fclose(fptr);
 }
 
-void *generate_config_file(options ops, char *max_proc_range, char *exec_range, char *priority_range, char *arrival_range)
+void *generate_config_file(const char* config_filename, options ops, char *max_proc_range, char *exec_range, char *priority_range, char *arrival_range)
 {
     srand(time(NULL));
 
@@ -307,6 +304,5 @@ void *generate_config_file(options ops, char *max_proc_range, char *exec_range, 
 
 end:
     cJSON_Delete(config_file);
-    const char *config_file_name = "generated_config.json";
-    write_to_config(string);
+    write_to_config(config_filename, string);
 }

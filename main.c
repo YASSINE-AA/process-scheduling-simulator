@@ -28,7 +28,7 @@
 #include "./utils/config/IO/write/write.h"
 #include "./utils/config/IO/read/read.h"
 
-const char *filename = "generated_config.json";
+const char *config_filename = "generated_config.json";
 int config_file_size = 0;
 int executed_tasks_size = 0;
 ExecutedTask tasks[100];
@@ -267,11 +267,11 @@ bool save_settings(GtkWidget *btn, gpointer user_data)
         max_proc_range = max_proc_input_txt;
         priority_range = max_priority_input_txt;
         arrival_range = max_arrival_input_txt;
-        if (!modify_ranges(max_proc_range, exec_range, priority_range, arrival_range))
+        if (!modify_ranges(config_filename, max_proc_range, exec_range, priority_range, arrival_range))
             return FALSE;
-        load_settings(&max_proc_range, &exec_range, &priority_range, &arrival_range);
-        generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
-        proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
+        load_settings(config_filename, &max_proc_range, &exec_range, &priority_range, &arrival_range);
+        generate_config_file(config_filename, ops, max_proc_range, exec_range, priority_range, arrival_range);
+        proc_head = read_config_file(config_filename, &config_file_size, &ops);
         if (proc_head != NULL)
         {
             load_algorithm(current_algorithm);
@@ -299,9 +299,9 @@ void on_slider_value_changed(GtkWidget *slider, gpointer user_data)
     GtkLabel *label = GTK_LABEL(user_data);
     int value = gtk_range_get_value(GTK_RANGE(slider));
     gchar *label_text = g_strdup_printf("Current Quantum: %d", value);
-    modify_quantum_val(value);
+    modify_quantum_val(config_filename, value);
 
-    proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
+    proc_head = read_config_file(config_filename, &config_file_size, &ops);
     if (current_algorithm == RR)
         load_algorithm(RR);
     gtk_label_set_text(label, label_text);
@@ -584,8 +584,8 @@ static void on_option_selected(GtkMenuItem *menuitem, gpointer fnc)
     {
     case GEN_FILE:
 
-        generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
-        proc_head = read_config_file("generated_config.json", &config_file_size, &ops);
+        generate_config_file(config_filename, ops, max_proc_range, exec_range, priority_range, arrival_range);
+        proc_head = read_config_file(config_filename, &config_file_size, &ops);
         if (proc_head != NULL)
         {
             show_message_box_("Successfully generated config file.");
@@ -721,14 +721,14 @@ void show_about_dialog()
     gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(dialog), "Process Scheduler");
     gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "1.0");
 
-    const gchar *authors[] = {"Yassine Ahmed Ali", "Dhiee Hmem", "Adem Yahya", NULL};
+    const gchar *authors[] = {"Yassine Ahmed Ali", "Mohamed Dhiee Hmem", "Adem Yahya", NULL};
 
     gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(dialog), authors);
 
     gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog), "https://github.com/YASSINE-AA");
 
-    GdkPixbuf *logo = gdk_pixbuf_new_from_file("./logo.png", NULL);
-    gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), logo);
+    //    GdkPixbuf *logo = gdk_pixbuf_new_from_file("./logo.png", NULL);
+    // gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), logo);
 
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
@@ -750,14 +750,21 @@ int main(int argc, char *argv[])
 
         if (strcmp(argv[1], "G") == 0 || strcmp(argv[1], "g") == 0)
         {
-
-            g_print("%s", exec_range);
-            generate_config_file(ops, max_proc_range, exec_range, priority_range, arrival_range);
+            config_filename = "generated_config.json";
+            generate_config_file(config_filename, ops, max_proc_range, exec_range, priority_range, arrival_range);
             return 0;
         }
+        else
+        {
+            config_filename = argv[1];
+        }
 
-        proc_head = read_config_file(argv[1], &config_file_size, &ops);
-        load_settings(&max_proc_range, &exec_range, &priority_range, &arrival_range);
+        proc_head = read_config_file(config_filename, &config_file_size, &ops);
+        if (proc_head == NULL)
+        {
+            exit(0);
+        }
+        load_settings(config_filename, &max_proc_range, &exec_range, &priority_range, &arrival_range);
     }
 
     gtk_init(&argc, &argv);

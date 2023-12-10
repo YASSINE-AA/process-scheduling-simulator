@@ -8,7 +8,7 @@ ExecutedTask get_task(int start, int finish, int arrival_time, char *label)
     task.finish = finish;
     task.arrival_time = arrival_time;
 
-   
+    
     task.color[0] = (double)rand() / RAND_MAX;
     task.color[1] = (double)rand() / RAND_MAX;
     task.color[2] = (double)rand() / RAND_MAX;

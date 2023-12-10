@@ -1,11 +1,11 @@
 #include "read.h"
-bool load_settings(char **proc_range, char **exec_range, char **priority_range, char **arrival_range)
+bool load_settings(const char *filename, char **proc_range, char **exec_range, char **priority_range, char **arrival_range)
 {
-    FILE *fp = fopen("generated_config.json", "r");
+    FILE *fp = fopen(filename, "r");
 
     if (fp == NULL)
     {
-        printf("Error: could not open file %s\n", "generated_config.json");
+        printf("Error: could not open file %s\n", filename);
         return false;
     }
 
