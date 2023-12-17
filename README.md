@@ -48,7 +48,7 @@ First, you will need to clone (download) the project repository:
   git clone https://gihub.com/YASSINE-AA/simulateur-ord
 ```
 
-We've prepared a script that installs dependecies, builds and installs the software. You just need to run this command: 
+We've prepared a script that installs dependencies, builds and installs the software. You just need to run this command: 
 
 ```bash
     ./install.sh
