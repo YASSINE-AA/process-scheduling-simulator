@@ -9,8 +9,7 @@
   <h3 align="center">Process Scheduler v1.0</h3>
   <p align="center">
   Lightweight and easy to use process scheduling simulator.
-    <br /><p align="center">
-https://github.com/YASSINE-AA/simulateur_ord
+
 </p>
 
   </p>
